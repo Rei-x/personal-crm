@@ -3,7 +3,6 @@
  * It relies on recommended configs out of the box for simplicity, but you can
  * and should modify this configuration to best suit your team's needs.
  */
-
 /** @type {import('eslint').Linter.Config} */
 module.exports = {
   root: true,
@@ -20,10 +19,8 @@ module.exports = {
     es6: true,
   },
   ignorePatterns: ["!**/.server", "!**/.client"],
-
   // Base config
   extends: ["eslint:recommended"],
-
   overrides: [
     // React
     {
@@ -48,8 +45,10 @@ module.exports = {
           typescript: {},
         },
       },
+      rules: {
+        "react/prop-types": "off", // Disable react/prop-types rule
+      },
     },
-
     // Typescript
     {
       files: ["**/*.{ts,tsx}"],
@@ -72,7 +71,6 @@ module.exports = {
         "plugin:import/typescript",
       ],
     },
-
     // Node
     {
       files: [".eslintrc.cjs"],
