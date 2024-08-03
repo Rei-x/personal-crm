@@ -11,7 +11,7 @@ export const env = createEnv({
     MATRIX_ACCESS_TOKEN: z.string(),
     TEMP_DIR: z.string().default("./temp"),
     TRANSCRIPTIONS_DIR: z.string().default("./transcriptions"),
-    PORT: z.number().default(3000),
+    PORT: z.coerce.number().default(3000),
   },
   runtimeEnv: process.env,
   isServer:
