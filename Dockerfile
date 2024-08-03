@@ -1,4 +1,5 @@
-FROM node:20-slim AS base
+FROM node:22-slim AS base
+RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
