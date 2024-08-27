@@ -63,3 +63,8 @@ export const reminderUser = relations(reminders, ({ one }) => ({
     references: [users.userId],
   }),
 }));
+
+export const jobs = pgTable("jobs", {
+  jobId: text("jobId").primaryKey(),
+  lastRunAt: timestamp("lastRunAt").defaultNow().notNull(),
+});

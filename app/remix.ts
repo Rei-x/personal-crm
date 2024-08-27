@@ -1,6 +1,9 @@
 import { createRequestHandler } from "@remix-run/express";
 import express from "express";
-import { app } from "./server/server.js";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import { env } from "./server/env.js";
+
+const app = express();
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -21,6 +24,14 @@ const build = viteDevServer
     // @ts-ignore it's on the server only
     // eslint-disable-next-line import/no-unresolved
     await import("../build/server/index.js");
+
+app.use(
+  "/api",
+  createProxyMiddleware({
+    target: env.API_URL + "/api",
+    changeOrigin: true,
+  })
+);
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore it's on the server only

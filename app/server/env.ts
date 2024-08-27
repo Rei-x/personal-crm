@@ -12,6 +12,8 @@ export const env = createEnv({
     TEMP_DIR: z.string().default("./temp"),
     TRANSCRIPTIONS_DIR: z.string().default("./transcriptions"),
     PORT: z.coerce.number().default(3000),
+    TOPIC_NAME: z.string().default("rei-reminders"),
+    API_URL: z.string().default("http://localhost:4000"),
   },
   runtimeEnv: process.env,
   isServer:

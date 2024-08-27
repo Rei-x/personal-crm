@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { format } from "date-fns";
 import { useEffect } from "react";
 import { desc } from "drizzle-orm";
+import { Avatar } from "@/components/Avatar";
 
 export const loader = async () => {
   return json({
@@ -57,11 +58,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="flex items-start gap-3" key={message.messageId}>
-                  <img
-                    src={`/user-image/${message.userId}`}
-                    alt=""
-                    className="bg-muted rounded-full w-8 h-8 flex items-center justify-center text-muted-foreground"
-                  />
+                  <Avatar userId={message.userId ?? ""} />
                   <div className="bg-muted rounded-lg p-3 max-w-[70%]">
                     <p className="text-sm">{message.body}</p>
                     <p className="text-xs text-muted-foreground">

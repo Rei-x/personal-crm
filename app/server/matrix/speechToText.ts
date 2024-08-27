@@ -131,13 +131,16 @@ export const enableSpeechToText = () => {
         }
       });
 
-      await db.insert(messages).values({
-        messageId: eventId,
-        roomId,
-        body,
-        userId: sender,
-        timestamp: event.getDate(),
-      });
+      await db
+        .insert(messages)
+        .values({
+          messageId: eventId,
+          roomId,
+          body,
+          userId: sender,
+          timestamp: event.getDate(),
+        })
+        .onConflictDoNothing();
 
       // Command to enable transcription
       if (body === "!devEnableTranscription") {

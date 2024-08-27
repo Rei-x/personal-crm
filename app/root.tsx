@@ -25,6 +25,7 @@ declare global {
   interface Window {
     ENV: {
       MATRIX_USER_ID: string;
+      API_URL: string;
     };
     isServer?: boolean;
   }
@@ -33,12 +34,13 @@ declare global {
 export async function loader() {
   // @ts-expect-error it's on the server only
   global.window = {
-    ENV: { MATRIX_USER_ID: env.MATRIX_USER_ID },
+    ENV: { MATRIX_USER_ID: env.MATRIX_USER_ID, API_URL: env.API_URL },
     isServer: true,
   };
   return json({
     ENV: {
       MATRIX_USER_ID: env.MATRIX_USER_ID,
+      API_URL: env.API_URL,
     },
   });
 }

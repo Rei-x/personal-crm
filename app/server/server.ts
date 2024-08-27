@@ -9,6 +9,7 @@ import { appRouter } from "./routers/app";
 import { enableSpeechToText } from "./matrix/speechToText";
 import seedrandom from "seedrandom";
 import { createCanvas } from "canvas";
+import { jobs } from "./crons";
 
 enableSpeechToText();
 await client.startClient({ initialSyncLimit: 0 });
@@ -104,15 +105,17 @@ const handleImageRequest = async ({
   return res.redirect(httpUrl);
 };
 
-export const app = express();
+const api = express();
 
-app.get("/health", (_req, res) => {
+api.use(cors());
+
+api.get("/health", (_req, res) => {
   res
     .status(client.isLoggedIn() ? 200 : 500)
     .send(client.isLoggedIn() ? "OK" : "Error");
 });
 
-app.get("/rooms", async (_req, res) => {
+api.get("/rooms", async (_req, res) => {
   const rows = await db.query.roomSettings.findMany({
     where: eq(roomSettings.transcriptionEnabled, true),
   });
@@ -127,7 +130,7 @@ app.get("/rooms", async (_req, res) => {
   res.json(roomsNames);
 });
 
-app.get("/image/:roomId", async (req, res) => {
+api.get("/image/:roomId", async (req, res) => {
   const roomId = req.params.roomId;
   const room = client.getRoom(roomId);
 
@@ -149,7 +152,7 @@ app.get("/image/:roomId", async (req, res) => {
   });
 });
 
-app.get("/user-image/:userId", async (req, res) => {
+api.get("/user-image/:userId", async (req, res) => {
   const userId = req.params.userId;
   const user = client.getUser(userId);
 
@@ -169,11 +172,19 @@ app.get("/user-image/:userId", async (req, res) => {
   });
 });
 
-app.use(cors());
-
-app.use(
+api.use(
   "/trpc",
   trpcExpress.createExpressMiddleware({
     router: appRouter,
   })
 );
+
+const app = express();
+
+app.use("/api", api);
+
+app.listen(4000, () => {
+  console.log("App listening on port 4000");
+});
+
+jobs.forEach((job) => job.start());
