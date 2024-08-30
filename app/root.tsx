@@ -1,4 +1,5 @@
 import {
+  isRouteErrorResponse,
   json,
   Links,
   Meta,
@@ -7,6 +8,7 @@ import {
   ScrollRestoration,
   useFetchers,
   useNavigation,
+  useRouteError,
   useRouteLoaderData,
 } from "@remix-run/react";
 import "./globals.css";
@@ -16,8 +18,9 @@ import { setDefaultOptions } from "date-fns";
 import { Providers } from "./components/Providers";
 import NProgress from "nprogress";
 import nProgressStyles from "nprogress/nprogress.css?url";
-import type { LinksFunction } from "@remix-run/node";
+import type { LinksFunction, MetaFunction } from "@remix-run/node";
 import { useEffect, useMemo } from "react";
+import { Layout as MyLayout } from "@/components/Layout";
 
 setDefaultOptions({ locale: pl });
 
@@ -82,6 +85,16 @@ export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: nProgressStyles }];
 };
 
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Jelly App" },
+    {
+      name: "description",
+      content: "Welcome to Jelly, all in one app of my life!",
+    },
+  ];
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   useProgress();
@@ -95,7 +108,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <MyLayout>{children}</MyLayout>
+        </Providers>
         <ScrollRestoration />
         <script
           dangerouslySetInnerHTML={{
@@ -110,4 +125,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <>
+        <h1>
+          {error.status} {error.statusText}
+        </h1>
+        <p>{error.data}</p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h1>Error!</h1>
+      {/* @ts-expect-error idk why*/}
+      <p>{error?.message ?? "Unknown error"}</p>
+    </>
+  );
 }

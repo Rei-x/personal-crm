@@ -257,7 +257,7 @@ const Reminders = () => {
                   {data.reminders.map((reminder) => (
                     <TableRow key={reminder.reminderId}>
                       <TableCell>
-                        <Avatar userId={reminder.user?.userId ?? ""} />
+                        <Avatar roomId={reminder.user?.userId ?? ""} />
                       </TableCell>
                       <TableCell>{reminder.user?.displayName}</TableCell>
                       <TableCell>

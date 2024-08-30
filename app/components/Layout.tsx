@@ -1,12 +1,5 @@
-import type { MetaFunction } from "@remix-run/node";
-import {
-  CircleUser,
-  Home,
-  Menu,
-  Package2,
-  Search,
-  TimerIcon,
-} from "lucide-react";
+import { Suspense, type ReactNode } from "react";
+import { CircleUser, Home, Menu, Package2, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,19 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Link, Outlet } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "Jelly App" },
-    {
-      name: "description",
-      content: "Welcome to Jelly, all in one app of my life!",
-    },
-  ];
-};
-
-export default function Dashboard() {
+export const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
@@ -50,13 +33,6 @@ export default function Dashboard() {
               >
                 <Home className="h-4 w-4" />
                 Dashboard
-              </Link>
-              <Link
-                to="/reminders"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <TimerIcon className="h-4 w-4" />
-                Reminders
               </Link>
             </nav>
           </div>
@@ -123,10 +99,10 @@ export default function Dashboard() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          <Outlet />
+        <main className="flex flex-1 gap-4 p-4 lg:gap-6 lg:p-6">
+          <Suspense fallback="Loading...">{children}</Suspense>
         </main>
       </div>
     </div>
   );
-}
+};

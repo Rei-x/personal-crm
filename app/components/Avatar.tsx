@@ -1,15 +1,15 @@
 import { Avatar as ShadAvatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export const Avatar = ({
-  userId,
+  roomId,
   username,
 }: {
-  userId: string;
+  roomId: string;
   username?: string;
 }) => {
   return (
     <ShadAvatar>
-      <AvatarImage src={`/api/user-image/${userId}`} />
+      <AvatarImage src={`${window.ENV.API_URL}/image/${roomId}`} />
       <AvatarFallback>{username ?? "?"}</AvatarFallback>
     </ShadAvatar>
   );

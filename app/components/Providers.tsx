@@ -1,8 +1,10 @@
 import { trpc } from "@/lib/trpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/react-query";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "./ui/sonner";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { httpBatchLink } from "@trpc/react-query";
+import { transformer } from "@/lib/transformer";
 
 export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
@@ -11,6 +13,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       links: [
         httpBatchLink({
           url: window.ENV.API_URL + "/trpc",
+          transformer,
         }),
       ],
     })
@@ -19,6 +22,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         {children} <Toaster />
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </trpc.Provider>
   );

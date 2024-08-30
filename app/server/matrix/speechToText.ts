@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import debugLib from "debug";
 import { db } from "../db";
 import * as fs from "node:fs/promises";
-import { processedEvents, users, messages, roomSettings } from "../schema";
+import { processedEvents, roomSettings } from "../schema";
 import path from "path";
 import { env } from "../env";
 import { v4 as uuidv4 } from "uuid";
@@ -111,36 +111,6 @@ export const enableSpeechToText = () => {
 
       log("Received message in room: %s", roomId);
       log("Message content: %s", JSON.stringify(event.getContent(), null, 2));
-
-      await db.transaction(async (tx) => {
-        const user = await tx.query.users.findFirst({
-          where: eq(users.userId, sender),
-        });
-
-        if (!user) {
-          const profileInfo = await client.getProfileInfo(sender);
-
-          await tx
-            .insert(users)
-            .values({
-              userId: sender,
-              displayName: profileInfo.displayname,
-              avatarUrl: profileInfo.avatar_url,
-            })
-            .onConflictDoNothing();
-        }
-      });
-
-      await db
-        .insert(messages)
-        .values({
-          messageId: eventId,
-          roomId,
-          body,
-          userId: sender,
-          timestamp: event.getDate(),
-        })
-        .onConflictDoNothing();
 
       // Command to enable transcription
       if (body === "!devEnableTranscription") {
