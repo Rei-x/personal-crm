@@ -23,6 +23,8 @@ import { Avatar } from "@/components/Avatar";
 import { formatDistanceToNow } from "date-fns";
 import { useJsonLoaderData } from "@/lib/transformer";
 import { jsonJson } from "@/lib/transformer.server";
+import { Chat } from "@/components/Chat";
+import { EventType } from "matrix-js-sdk";
 
 const paramsSchema = z.object({
   roomId: z.string(),
@@ -158,15 +160,19 @@ const Room = () => {
           </Button>
         </Form>
       </ShadForm>
-
-      {/* <Chat
-        messages={room.events.map((message) => ({
-          messageId: message.id,
-          userId: message.userId,
-          body: message.body,
-          timestamp: message.createdAt,
-        }))}
-      /> */}
+      <div className="w-[600px]">
+        <Chat
+          roomId={room.id}
+          messages={room.events
+            .filter((e) => e.getType() === EventType.RoomMessage)
+            .map((e) => ({
+              body: e.getContent().body,
+              messageId: e.getId() ?? "",
+              userId: e.getSender() ?? "",
+              timestamp: e.getDate() ?? new Date(),
+            }))}
+        />
+      </div>
     </div>
   );
 };

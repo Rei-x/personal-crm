@@ -11,6 +11,11 @@ import {
 } from "@trpc/server";
 
 export const appRouter = router({
+  sendMessage: publicProcedure
+    .input(z.object({ roomId: z.string(), message: z.string() }))
+    .mutation(async ({ input: { roomId, message } }) => {
+      await client.sendTextMessage(roomId, message);
+    }),
   rooms: router({
     single: publicProcedure
       .input(
@@ -28,10 +33,9 @@ export const appRouter = router({
           });
         }
 
-        const eventsCopy = room
-          .getLiveTimeline()
-          .getEvents()
-          .map((e) => e);
+        const timeline = room.getLiveTimeline();
+
+        const eventsCopy = timeline.getEvents().map((e) => e);
 
         let settings = await db.query.roomSettings.findFirst({
           where: (q) => eq(q.roomId, roomId),
