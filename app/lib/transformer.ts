@@ -3,7 +3,7 @@ import { MatrixEvent, type IEvent } from "matrix-js-sdk";
 import { useLoaderData as useRemixLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 
-// @ts-expect-error ???
+// @ts-expect-error ??? DASDASDSAD
 SuperJSON.registerCustom<MatrixEvent, IEvent>(
   {
     deserialize(v) {
@@ -29,6 +29,6 @@ export const useJsonLoaderData = <
 >() => {
   const loaderData = useRemixLoaderData<T>(); // HACK: any to avoid type error
 
-  // @ts-expect-error ???
+  // @ts-expect-error ??? asdasdsadsad
   return useMemo(() => parse<Awaited<ReturnType<T>>>(loaderData), [loaderData]);
 };

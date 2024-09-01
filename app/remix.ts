@@ -22,7 +22,6 @@ const build = viteDevServer
   ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
   : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore it's on the server only
-    // eslint-disable-next-line import/no-unresolved
     await import("../build/server/index.js");
 
 app.use(

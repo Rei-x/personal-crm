@@ -16,7 +16,7 @@ import { env } from "./server/env";
 import { pl } from "date-fns/locale/pl";
 import { setDefaultOptions } from "date-fns";
 import { Providers } from "./components/Providers";
-import NProgress from "nprogress";
+import nprogress from "nprogress";
 import nProgressStyles from "nprogress/nprogress.css?url";
 import type { LinksFunction, MetaFunction } from "@remix-run/node";
 import { useEffect, useMemo } from "react";
@@ -74,9 +74,9 @@ const useProgress = () => {
   useEffect(() => {
     // and when it's something else it means it's either submitting a form or
     // waiting for the loaders of the next location so we start it
-    if (state === "loading") NProgress.start();
+    if (state === "loading") nprogress.start();
     // when the state is idle then we can to complete the progress bar
-    if (state === "idle") NProgress.done();
+    if (state === "idle") nprogress.done();
   }, [state]);
 };
 
@@ -144,7 +144,7 @@ export function ErrorBoundary() {
   return (
     <>
       <h1>Error!</h1>
-      {/* @ts-expect-error idk why*/}
+      {/* @ts-expect-error ??? ?????????*/}
       <p>{error?.message ?? "Unknown error"}</p>
     </>
   );

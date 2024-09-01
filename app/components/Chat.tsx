@@ -16,7 +16,7 @@ import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { DatetimePicker } from "./ui/datetime-picker";
 
-const isMe = (userId: string) => {
+const isMe = (userId: string | null) => {
   return window.ENV.MATRIX_USER_ID === userId;
 };
 
@@ -25,12 +25,12 @@ export const Chat = ({
   messages,
 }: {
   roomId: string;
-  messages: Array<{
+  messages: {
     messageId: string;
     userId: string | null;
     timestamp: Date;
     body: string;
-  }>;
+  }[];
 }) => {
   const { revalidate } = useRevalidator();
   const toast = useToast();
@@ -81,7 +81,7 @@ export const Chat = ({
             .filter((m) => m.userId)
             .map((message) => (
               <ChatBubble
-                variant={isMe(message.userId!) ? "sent" : "received"}
+                variant={isMe(message.userId) ? "sent" : "received"}
                 key={message.messageId}
               >
                 <Avatar userId={message.userId ?? ""} />

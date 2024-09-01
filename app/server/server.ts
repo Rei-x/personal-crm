@@ -22,8 +22,7 @@ boss.on("error", console.error);
 
 await scheduleNotificationJob.work();
 
-
-await scheduleNotificationJob.schedule("0 10 * * *")
+await scheduleNotificationJob.schedule("0 10 * * *");
 
 await scheduleMessage.work();
 

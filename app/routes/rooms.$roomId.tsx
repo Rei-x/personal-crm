@@ -66,7 +66,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     .where(eq(roomSettings.roomId, roomId));
 };
 
-const Room = () => {
+function Room() {
   const { room } = useJsonLoaderData<typeof loader>();
 
   const form = useRemixForm<z.infer<typeof schema>>({
@@ -188,6 +188,6 @@ const Room = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Room;

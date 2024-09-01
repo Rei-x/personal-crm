@@ -15,7 +15,6 @@ const ChatInput = React.forwardRef<
   ChatInputProps & TextareaProps
 >(({ className, value, onKeyDown, onChange, placeholder, ...props }, ref) => (
   <Textarea
-    
     autoComplete="off"
     value={value}
     ref={ref}

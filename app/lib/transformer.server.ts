@@ -7,6 +7,6 @@ export const jsonJson = <Data>(
   init?: number | ResponseInit
 ): Data => {
   const superJsonResult = serialize(obj);
-  // @ts-expect-error ???
+  // @ts-expect-error ??? asdsadasdasd
   return json(superJsonResult, init);
 };

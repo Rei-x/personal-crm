@@ -46,12 +46,8 @@
           "name": "messages_userId_users_userId_fk",
           "tableFrom": "messages",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "userId"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["userId"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -142,12 +138,8 @@
           "name": "reminders_userId_users_userId_fk",
           "tableFrom": "reminders",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "userId"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["userId"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

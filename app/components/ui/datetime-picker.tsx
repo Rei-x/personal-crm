@@ -57,7 +57,7 @@ function DatetimePicker({
       <DayPicker
         mode="single"
         selected={selectedDate}
-        // @ts-expect-error ???
+        // @ts-expect-error ??? ?????????
         onSelect={setDate}
         showOutsideDays={showOutsideDays}
         className={cn("py-3", className)}
