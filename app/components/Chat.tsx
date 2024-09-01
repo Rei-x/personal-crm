@@ -1,6 +1,11 @@
-import { CornerDownLeft } from "lucide-react";
+import {
+  CalendarIcon,
+  Clock,
+  CornerDownLeft,
+  SendHorizontal,
+} from "lucide-react";
 import { Avatar } from "./Avatar";
-import { format } from "date-fns";
+import { format, formatDistanceToNow, setDate, startOfDay } from "date-fns";
 import {
   ChatBubble,
   ChatBubbleMessage,
@@ -11,8 +16,13 @@ import { ChatMessageList } from "./ui/chat/chat-message-list";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
 import { useRevalidator } from "@remix-run/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { cn } from "@/lib/utils";
+import { date } from "zod";
+import { DatetimePicker } from "./ui/datetime-picker";
+import { set } from "nprogress";
 
 const isMe = (userId: string) => {
   return window.ENV.MATRIX_USER_ID === userId;
@@ -41,25 +51,40 @@ export const Chat = ({
       });
     },
   });
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
-    <div className="flex-1 max-h-[600px] w-full overflow-y-scroll p-4 space-y-4 rounded-lg border border-dashed shadow-sm">
+    <div className="flex-1  w-full  p-4 space-y-4 rounded-lg border border-dashed shadow-sm">
       <form
         onSubmit={(e) => {
           e.preventDefault();
 
           sendMessage
-            .mutateAsync({ roomId, message })
+            .mutateAsync({ roomId, message, date: scheduledDate })
             .then(() => {
               setMessage("");
+              setScheduledDate(undefined);
             })
             .finally(() => {
               revalidate();
             });
         }}
       >
-        <ChatMessageList>
+        <ChatMessageList
+          className="max-h-[600px] overflow-y-scroll"
+          ref={messagesContainerRef}
+        >
           {messages
             .filter((m) => m.userId)
             .map((message) => (
@@ -77,22 +102,64 @@ export const Chat = ({
               </ChatBubble>
             ))}
         </ChatMessageList>
-        <div className="flex-1" />
-        <ChatInput
-          value={message}
-          disabled={sendMessage.isPending}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message here..."
-        />
-        <Button
-          size="sm"
-          loading={sendMessage.isPending}
-          type="submit"
-          className="ml-auto gap-1.5"
-        >
-          Send Message
-          <CornerDownLeft className="size-3.5" />
-        </Button>
+        <div className="flex flex-1 items-stretch">
+          <ChatInput
+            value={message}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
+                e.preventDefault();
+                (e.target.form as HTMLFormElement).requestSubmit();
+              }
+            }}
+            disabled={sendMessage.isPending}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Tutaj są wiadomości..."
+            className="min-h-4 rounded-r-none"
+          />
+          <Button
+            size="sm"
+            loading={sendMessage.isPending}
+            type="submit"
+            className="rounded-l-none w-12 h-auto flex-1 gap-1.5"
+          >
+            <SendHorizontal size={22} />
+          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                loading={sendMessage.isPending}
+                variant="secondary"
+                className="rounded-l-none ml-2 w-12 h-auto flex-1 gap-1.5"
+              >
+                <Clock size={22} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4">
+              <DatetimePicker
+                disabled={{ before: new Date() }}
+                selected={scheduledDate}
+                setDate={(d) => {
+                  if (d < startOfDay(new Date())) {
+                    setScheduledDate(undefined);
+                  } else {
+                    setScheduledDate(d);
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {scheduledDate ? (
+            <span>
+              <CalendarIcon size={16} className="inline-block mr-1" />
+              Zostanie wysłana {format(scheduledDate, "PPPp")} -{" "}
+              {formatDistanceToNow(scheduledDate, { addSuffix: true })}
+            </span>
+          ) : null}
+        </p>
       </form>
     </div>
   );

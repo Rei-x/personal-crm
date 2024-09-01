@@ -1,5 +1,12 @@
-import pgBoss, { type SendOptions, type WorkHandler } from "pg-boss";
+import pgBoss, {
+  type ScheduleOptions,
+  type SendOptions,
+  type WorkHandler,
+} from "pg-boss";
 import { env } from "../env";
+import { db } from "../db";
+
+import { and, eq, inArray } from "drizzle-orm";
 export const boss = new pgBoss(env.DATABASE_URL);
 
 export const createJob = <T extends object | undefined>(
@@ -9,7 +16,7 @@ export const createJob = <T extends object | undefined>(
 ) => {
   return {
     emit: async (data: T, overwriteOptions: SendOptions = {}) => {
-      await boss.send({
+      const jobId = await boss.send({
         name,
         data,
         options: {
@@ -17,9 +24,37 @@ export const createJob = <T extends object | undefined>(
           ...overwriteOptions,
         },
       });
+
+      if (!jobId) {
+        throw new Error("Failed to emit job");
+      }
+    },
+    schedule: async (cron: string, data?: T, options: ScheduleOptions = {}) => {
+      return boss.schedule(name, cron, data, {
+        tz: "Europe/Warsaw",
+        ...options,
+      });
+    },
+    getJobs: async () => {
+      return db.query.job
+        .findMany({
+          where: (q) =>
+            and(eq(q.name, name), inArray(q.state, ["active", "created"])),
+        })
+        .then((jobs) =>
+          jobs.map((j) => ({
+            ...j,
+            data: j.data as T,
+          }))
+        );
     },
     work: async () => {
-      await boss.work(name, work);
+      if (!(await boss.getQueue(name))) {
+        await boss.createQueue(name, {
+          name,
+        });
+      }
+      await boss.work<T>(name, work);
     },
   };
 };

@@ -1,30 +1,6 @@
 import { env } from "../env";
 
-// Tag	Emoji
-// +1	👍
-// partying_face	🥳
-// tada	🎉
-// heavy_check_mark	✔️
-// loudspeaker	📢
-// ...	...
-
-// Tag	Emoji
-// -1	👎️
-// warning	⚠️
-// rotating_light	️🚨
-// triangular_flag_on_post	🚩
-// skull	💀
-// ...	...
-
-// Tag	Emoji
-// facepalm	🤦
-// no_entry	⛔
-// no_entry_sign	🚫
-// cd	💿
-// computer	💻
-// ...	...
-
-enum Tag {
+export enum NtfyTag {
   PLUS_ONE = "+1",
   PARTYING_FACE = "partying_face",
   TADA = "tada",
@@ -53,24 +29,17 @@ export const ntfy = () => {
       message: string;
       title: string;
       icon?: string;
-      tags?: Tag[];
+      tags?: NtfyTag[];
     }) => {
-      const headers = new Headers({
-        Title: title,
-      });
-
-      if (icon) {
-        headers.set("Icon", icon);
-      }
-
-      if (tags) {
-        headers.set("Tags", tags.join(","));
-      }
-
-      return fetch(`https://ntfy.sh/${env.TOPIC_NAME}`, {
+      return fetch(`https://ntfy.sh`, {
         method: "POST",
-        body: message,
-        headers,
+        body: JSON.stringify({
+          topic: env.TOPIC_NAME,
+          title,
+          message,
+          tags,
+          icon,
+        }),
       });
     },
   };

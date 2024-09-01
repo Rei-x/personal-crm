@@ -163,14 +163,27 @@ const Room = () => {
       <div className="w-[600px]">
         <Chat
           roomId={room.id}
-          messages={room.events
-            .filter((e) => e.getType() === EventType.RoomMessage)
-            .map((e) => ({
-              body: e.getContent().body,
-              messageId: e.getId() ?? "",
-              userId: e.getSender() ?? "",
-              timestamp: e.getDate() ?? new Date(),
-            }))}
+          messages={[
+            ...room.events
+              .filter((e) => e.getType() === EventType.RoomMessage)
+              .map((e) => ({
+                body: e.getContent().body,
+                messageId: e.getId() ?? "",
+                userId: e.getSender() ?? "",
+                timestamp: e.getDate() ?? new Date(),
+              })),
+            ...room.scheduledMessages.map((m) => ({
+              body: `Wyśle ${formatDistanceToNow(
+                m.date < new Date() ? new Date() : m.date,
+                {
+                  addSuffix: true,
+                }
+              )}: ${m.message}`,
+              messageId: m.id,
+              userId: window.ENV.MATRIX_USER_ID,
+              timestamp: m.date,
+            })),
+          ]}
         />
       </div>
     </div>

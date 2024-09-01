@@ -7,10 +7,25 @@ import { appRouter } from "./routers/app";
 
 import { boss } from "./services/pgboss";
 import { imageApi } from "./api/image";
+import { scheduleNotificationJob } from "@/jobs/scheduleNotification";
+import { scheduleMessage } from "@/jobs/scheduleMessage";
+import { logger } from "matrix-js-sdk/lib/logger";
 
+logger.disableAll();
 // enableSpeechToText();
-await client.startClient();
+await client.startClient({
+  disablePresence: true,
+});
 await boss.start();
+
+boss.on("error", console.error);
+
+await scheduleNotificationJob.work();
+
+
+await scheduleNotificationJob.schedule("0 10 * * *")
+
+await scheduleMessage.work();
 
 const api = express();
 

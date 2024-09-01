@@ -9,15 +9,52 @@ import {
   type inferRouterInputs,
   type inferRouterOutputs,
 } from "@trpc/server";
+import { scheduleMessage } from "@/jobs/scheduleMessage";
+
+const loggedProcedure = publicProcedure.use(async (opts) => {
+  const start = Date.now();
+
+  const result = await opts.next();
+
+  const durationMs = Date.now() - start;
+  const meta = { path: opts.path, type: opts.type, durationMs };
+
+  result.ok
+    ? console.log("OK request timing:", meta)
+    : console.error("Non-OK request timing", meta);
+
+  return result;
+});
 
 export const appRouter = router({
-  sendMessage: publicProcedure
-    .input(z.object({ roomId: z.string(), message: z.string() }))
-    .mutation(async ({ input: { roomId, message } }) => {
-      await client.sendTextMessage(roomId, message);
+  sendMessage: loggedProcedure
+    .input(
+      z.object({
+        roomId: z.string(),
+        message: z.string(),
+        date: z.date().optional(),
+      })
+    )
+    .mutation(async ({ input: { roomId, message, date } }) => {
+      if (date) {
+        console.log("Scheduling message", { roomId, message, date });
+        const result = await scheduleMessage.emit(
+          {
+            roomId,
+            message,
+          },
+          {
+            startAfter: date,
+          }
+        );
+        console.log("Scheduled message", result);
+      } else {
+        await client.sendTextMessage(roomId, message);
+      }
     }),
+
   rooms: router({
-    single: publicProcedure
+    single: loggedProcedure
       .input(
         z.object({
           roomId: z.string(),
@@ -57,15 +94,26 @@ export const appRouter = router({
             });
           }
         }
+
         return {
           name: room.name,
           id: room.roomId,
           events: eventsCopy,
+          scheduledMessages: await scheduleMessage.getJobs().then((jobs) =>
+            jobs
+              .filter((j) => j.data.roomId === roomId)
+              .map((j) => ({
+                id: j.id,
+                roomId: j.data.roomId,
+                message: j.data.message,
+                date: j.startAfter,
+              }))
+          ),
           latestMessageDate: new Date(room.getLastActiveTimestamp()),
           settings,
         };
       }),
-    all: publicProcedure.query(async () => {
+    all: loggedProcedure.query(async () => {
       return client
         .getVisibleRooms()
         .map((room) => {
