@@ -1,11 +1,6 @@
-import {
-  CalendarIcon,
-  Clock,
-  CornerDownLeft,
-  SendHorizontal,
-} from "lucide-react";
+import { CalendarIcon, Clock, SendHorizontal } from "lucide-react";
 import { Avatar } from "./Avatar";
-import { format, formatDistanceToNow, setDate, startOfDay } from "date-fns";
+import { format, formatDistanceToNow, startOfDay } from "date-fns";
 import {
   ChatBubble,
   ChatBubbleMessage,
@@ -19,10 +14,7 @@ import { useRevalidator } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { cn } from "@/lib/utils";
-import { date } from "zod";
 import { DatetimePicker } from "./ui/datetime-picker";
-import { set } from "nprogress";
 
 const isMe = (userId: string) => {
   return window.ENV.MATRIX_USER_ID === userId;
