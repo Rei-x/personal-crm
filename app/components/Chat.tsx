@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { DatetimePicker } from "./ui/datetime-picker";
+import { Markdown } from "./Markdown";
 
 const isMe = (userId: string | null) => {
   return window.ENV.MATRIX_USER_ID === userId;
@@ -86,7 +87,7 @@ export const Chat = ({
               >
                 <Avatar userId={message.userId ?? ""} />
                 <ChatBubbleMessage>
-                  {message.body}
+                  <Markdown>{message.body}</Markdown>
                   <ChatBubbleTimestamp
                     timestamp={format(message.timestamp, "HH:mm")}
                   />
