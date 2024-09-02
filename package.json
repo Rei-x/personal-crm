@@ -21,7 +21,7 @@
     "start:remix": "NODE_ENV=production node dist/remix/remix.js",
     "start": "conc -c auto npm:start:*",
     "typecheck": "tsc",
-    "prepare": "husky"
+    "prepare": "if [ -z \"$CI\" ]; then husky install; fi"
   },
   "packageManager": "pnpm@9.6.0",
   "dependencies": {

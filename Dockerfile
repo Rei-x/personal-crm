@@ -2,12 +2,13 @@ FROM node:20-slim AS base
 RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV CI=true
 RUN corepack enable
 COPY . /app
 WORKDIR /app
 
 FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
