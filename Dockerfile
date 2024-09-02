@@ -1,5 +1,5 @@
 FROM node:20-slim AS base
-RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y curl wget && rm -rf /var/lib/apt/lists/*
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
