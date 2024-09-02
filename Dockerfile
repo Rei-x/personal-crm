@@ -2,9 +2,8 @@ FROM node:20-slim AS base
 
 # Install curl, wget, and font dependencies
 RUN apt update && \
-  apt install -y curl wget fontconfig && \
-  apt install -y --no-install-recommends ttf-mscorefonts-installer && \
-  rm -rf /var/lib/apt/lists/*
+    apt install -y curl wget fontconfig fonts-liberation && \
+    rm -rf /var/lib/apt/lists/*
 
 # Configure font cache
 RUN fc-cache -f -v
