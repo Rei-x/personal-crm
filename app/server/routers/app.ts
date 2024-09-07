@@ -54,6 +54,15 @@ export const appRouter = router({
         await client.sendTextMessage(roomId, message);
       }
     }),
+  deleteScheduledMessage: loggedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(async ({ input: { id } }) => {
+      await scheduleMessage.cancel(id);
+    }),
 
   rooms: router({
     single: loggedProcedure

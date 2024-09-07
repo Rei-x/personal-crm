@@ -35,6 +35,9 @@ export const createJob = <T extends object | undefined>(
         ...options,
       });
     },
+    cancel: async (id: string) => {
+      return boss.cancel(name, id);
+    },
     getJobs: async () => {
       return db.query.job
         .findMany({

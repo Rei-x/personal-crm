@@ -14,6 +14,7 @@ export const env = createEnv({
     PORT: z.coerce.number().default(3000),
     TOPIC_NAME: z.string().default("rei-reminders"),
     API_URL: z.string().default("http://localhost:4000"),
+    LIDL_PLUS_REFRESH_TOKEN: z.string(),
   },
   runtimeEnv: process.env,
   isServer:

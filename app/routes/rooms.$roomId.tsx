@@ -92,7 +92,6 @@ function Room() {
         ? room.settings?.howOftenInSeconds / (24 * 60 * 60)
         : 0,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room]);
 
   return (
@@ -167,21 +166,19 @@ function Room() {
             ...room.events
               .filter((e) => e.getType() === EventType.RoomMessage)
               .map((e) => ({
-                body: e.getContent().body,
+                body: e.getContent().body as string,
                 messageId: e.getId() ?? "",
                 userId: e.getSender() ?? "",
                 timestamp: e.getDate() ?? new Date(),
+                type: "text" as const,
               })),
             ...room.scheduledMessages.map((m) => ({
-              body: `Wyśle ${formatDistanceToNow(
-                m.date < new Date() ? new Date() : m.date,
-                {
-                  addSuffix: true,
-                }
-              )}: ${m.message}`,
+              body: m.message,
               messageId: m.id,
               userId: window.ENV.MATRIX_USER_ID,
               timestamp: m.date,
+              type: "scheduled" as const,
+              scheduledDate: m.date,
             })),
           ]}
         />

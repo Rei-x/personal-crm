@@ -8,8 +8,8 @@
     "build:server": "tsup -d dist/server app/server/server.ts",
     "build:remix": "remix vite:build && tsup -d dist/remix app/remix.ts",
     "dev": "conc -c auto npm:dev:*",
-    "dev:server": "DEBUG=app* tsx watch --ignore \"*.mjs\" --clear-screen=false app/server/server.ts",
-    "dev:remix": "tsx watch --ignore \"*.mjs\" --clear-screen=false app/remix.ts",
+    "dev:server": "wait-on tcp:5432 && DEBUG=app* tsx watch --ignore \"*.mjs\" --clear-screen=false app/server/server.ts",
+    "dev:remix": "wait-on tcp:5432 && tsx watch --ignore \"*.mjs\" --clear-screen=false app/remix.ts",
     "dev:db": "docker compose up",
     "studio": "drizzle-kit studio",
     "generate": "drizzle-kit generate",
@@ -21,11 +21,12 @@
     "start:remix": "NODE_ENV=production node dist/remix/remix.js",
     "start": "conc -c auto npm:start:*",
     "typecheck": "tsc",
-    "prepare": "if [ -z \"$CI\" ]; then husky install; fi"
+    "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
   "packageManager": "pnpm@9.6.0",
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@playwright/browser-chromium": "^1.47.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -65,6 +66,7 @@
     "@trpc/server": "^11.0.0-rc.502",
     "@types/debug": "^4.1.12",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.7.7",
     "canvas": "^2.11.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -92,7 +94,9 @@
     "nprogress": "^0.2.0",
     "openai": "^4.58.0",
     "pg-boss": "^10.1.1",
+    "playwright": "^1.47.0",
     "postgres": "^3.4.4",
+    "qs": "^6.13.0",
     "react": "^18.2.0",
     "react-day-picker": "8",
     "react-dom": "^18.2.0",
@@ -110,7 +114,8 @@
     "use-debounce": "^10.0.3",
     "uuid": "^10.0.0",
     "vaul": "^0.9.2",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zod-form-data": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
@@ -122,6 +127,7 @@
     "@types/express": "^4.17.21",
     "@types/node-localstorage": "^1.3.3",
     "@types/nprogress": "^0.2.3",
+    "@types/qs": "^6.9.15",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.2.7",
     "@types/seedrandom": "^3.0.8",
@@ -144,7 +150,9 @@
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.4.0",
     "vite": "^5.4.3",
-    "vite-tsconfig-paths": "^5.0.1"
+    "vite-tsconfig-paths": "^5.0.1",
+    "vitest": "^2.0.5",
+    "wait-on": "^8.0.0"
   },
   "engines": {
     "node": ">=20.0.0"

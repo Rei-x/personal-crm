@@ -1,4 +1,4 @@
-import { CalendarIcon, Clock, SendHorizontal } from "lucide-react";
+import { CalendarIcon, Clock, SendHorizontal, Trash2 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { format, formatDistanceToNow, startOfDay } from "date-fns";
 import {
@@ -16,9 +16,31 @@ import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { DatetimePicker } from "./ui/datetime-picker";
 import { Markdown } from "./Markdown";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./ui/context-menu";
 
 const isMe = (userId: string | null) => {
   return window.ENV.MATRIX_USER_ID === userId;
+};
+
+interface Message {
+  messageId: string;
+  userId: string | null;
+  timestamp: Date;
+  body: string;
+}
+
+type TextMessage = Message & {
+  type: "text";
+};
+
+type ScheduledMessage = Message & {
+  scheduledDate: Date;
+  type: "scheduled";
 };
 
 export const Chat = ({
@@ -26,12 +48,7 @@ export const Chat = ({
   messages,
 }: {
   roomId: string;
-  messages: {
-    messageId: string;
-    userId: string | null;
-    timestamp: Date;
-    body: string;
-  }[];
+  messages: (TextMessage | ScheduledMessage)[];
 }) => {
   const { revalidate } = useRevalidator();
   const toast = useToast();
@@ -39,6 +56,15 @@ export const Chat = ({
     onError: (e) => {
       toast.toast({
         title: "Failed to send message",
+        description: e.message,
+        variant: "destructive",
+      });
+    },
+  });
+  const deleteScheduledMessage = trpc.deleteScheduledMessage.useMutation({
+    onError: (e) => {
+      toast.toast({
+        title: "Failed to delete scheduled message",
         description: e.message,
         variant: "destructive",
       });
@@ -80,20 +106,58 @@ export const Chat = ({
         >
           {messages
             .filter((m) => m.userId)
-            .map((message) => (
-              <ChatBubble
-                variant={isMe(message.userId) ? "sent" : "received"}
-                key={message.messageId}
-              >
-                <Avatar userId={message.userId ?? ""} />
-                <ChatBubbleMessage>
-                  <Markdown>{message.body}</Markdown>
-                  <ChatBubbleTimestamp
-                    timestamp={format(message.timestamp, "HH:mm")}
-                  />
-                </ChatBubbleMessage>
-              </ChatBubble>
-            ))}
+            .map((message) =>
+              message.type === "text" ? (
+                <ChatBubble
+                  variant={isMe(message.userId) ? "sent" : "received"}
+                  key={message.messageId}
+                >
+                  <Avatar userId={message.userId ?? ""} />
+                  <ChatBubbleMessage>
+                    <Markdown>{message.body}</Markdown>
+                    <ChatBubbleTimestamp
+                      timestamp={format(message.timestamp, "HH:mm")}
+                    />
+                  </ChatBubbleMessage>
+                </ChatBubble>
+              ) : (
+                <ChatBubble
+                  variant={isMe(message.userId) ? "sent" : "received"}
+                  key={message.messageId}
+                >
+                  <Avatar userId={message.userId ?? ""} />
+                  <ContextMenu>
+                    <ContextMenuTrigger>
+                      <ChatBubbleMessage>
+                        <Markdown>{message.body}</Markdown>
+                        <ChatBubbleTimestamp
+                          timestamp={`Wyśle za ${formatDistanceToNow(
+                            message.scheduledDate,
+                            { addSuffix: true }
+                          )} o ${format(message.timestamp, "HH:mm")}`}
+                        />
+                      </ChatBubbleMessage>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem
+                        className="flex justify-between"
+                        onClick={() => {
+                          deleteScheduledMessage
+                            .mutateAsync({
+                              id: message.messageId,
+                            })
+                            .then(async () => {
+                              revalidate();
+                            });
+                        }}
+                      >
+                        <p>Usuń</p> <Trash2 size="16" />
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                </ChatBubble>
+              )
+            )}
         </ChatMessageList>
         <div className="flex flex-1 items-stretch">
           <ChatInput
