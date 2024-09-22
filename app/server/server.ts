@@ -9,6 +9,7 @@ import { boss } from "./services/pgboss";
 import { imageApi } from "./api/image";
 import { scheduleNotificationJob } from "@/jobs/scheduleNotification";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
+import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 
 // enableSpeechToText();
 await client.startClient({
@@ -23,6 +24,10 @@ await scheduleNotificationJob.work();
 await scheduleNotificationJob.schedule("0 10 * * *");
 
 await scheduleMessage.work();
+
+await enableLidlCoupons.work();
+
+await enableLidlCoupons.schedule("5 * * * *");
 
 const api = express();
 

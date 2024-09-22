@@ -10,6 +10,8 @@ import {
   type inferRouterOutputs,
 } from "@trpc/server";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
+import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
+import { MsgType } from "matrix-js-sdk";
 
 const loggedProcedure = publicProcedure.use(async (opts) => {
   const start = Date.now();
@@ -35,9 +37,10 @@ export const appRouter = router({
         roomId: z.string(),
         message: z.string(),
         date: z.date().optional(),
+        mentions: z.array(z.string()).optional(),
       })
     )
-    .mutation(async ({ input: { roomId, message, date } }) => {
+    .mutation(async ({ input: { roomId, message, date, mentions } }) => {
       if (date) {
         console.log("Scheduling message", { roomId, message, date });
         const result = await scheduleMessage.emit(
@@ -51,7 +54,16 @@ export const appRouter = router({
         );
         console.log("Scheduled message", result);
       } else {
-        await client.sendTextMessage(roomId, message);
+        await client.sendMessage(roomId, {
+          msgtype: MsgType.Text,
+          body: message,
+          format: "org.matrix.custom.html",
+          "m.mentions": mentions
+            ? {
+                user_ids: mentions,
+              }
+            : undefined,
+        });
       }
     }),
   deleteScheduledMessage: loggedProcedure
@@ -63,6 +75,10 @@ export const appRouter = router({
     .mutation(async ({ input: { id } }) => {
       await scheduleMessage.cancel(id);
     }),
+
+  enableLidlCoupons: loggedProcedure.mutation(async () => {
+    await enableLidlCoupons.emit(undefined);
+  }),
 
   rooms: router({
     single: loggedProcedure

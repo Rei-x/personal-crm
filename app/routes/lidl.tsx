@@ -1,9 +1,10 @@
 import { CouponCard } from "@/components/CouponCard";
 import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
 import { lidlPlusClient } from "@/server/services/lidlPlus/client";
 import type { Coupon } from "@/server/services/lidlPlus/coupons";
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { useLoaderData, useRevalidator } from "@remix-run/react";
 import { Check, Ticket, TicketCheck } from "lucide-react";
 import { zfd } from "zod-form-data";
 
@@ -94,9 +95,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 const LidlCoupons = () => {
   const data = useLoaderData<typeof loader>();
+  const { revalidate } = useRevalidator();
+  const mut = trpc.enableLidlCoupons.useMutation({
+    onSettled: () => {
+      revalidate();
+    },
+  });
 
   return (
-    <div className="flex">
+    <div className="flex flex-col lg:flex-row">
       <div className="h-full border-r pr-4">
         <div>
           <p className="text-xl font-bold">Kupony</p>
@@ -111,14 +118,19 @@ const LidlCoupons = () => {
             </p>{" "}
           </div>
         </div>
-        <Form method="POST">
-          <input type="hidden" name="_action" value="activate_all" />
-          <Button size="lg" className="mt-8">
-            Aktywuj wszystkie <Check className="w-6 h-6 ml-2" />
-          </Button>
-        </Form>
+
+        <Button
+          size="lg"
+          className="mt-8"
+          onClick={() => {
+            mut.mutate();
+          }}
+          loading={mut.isPending}
+        >
+          Aktywuj wszystkie <Check className="w-6 h-6 ml-2" />
+        </Button>
       </div>
-      <div className="ml-4 grid grid-cols-3 gap-4">
+      <div className="md:ml-4 mt-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.coupons.map((c) => (
           <CouponCard key={c.id} {...c} />
         ))}

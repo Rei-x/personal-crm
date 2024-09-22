@@ -57,7 +57,21 @@ export const createJob = <T extends object | undefined>(
           name,
         });
       }
-      await boss.work<T>(name, work);
+      await boss.work<T>(name, async (...args) => {
+        console.log(`Starting job - ${name}`);
+
+        try {
+          const result = await work(...args);
+
+          console.log(`Finished job - ${name}`);
+
+          return result;
+        } catch (e) {
+          console.log(`Error in job - ${name}`, e);
+
+          throw e;
+        }
+      });
     },
   };
 };
