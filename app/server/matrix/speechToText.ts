@@ -28,7 +28,11 @@ const transcribeAudio = async (
     );
 
     // Download the audio file using fetch with streaming
-    const response = await fetch(httpUrl);
+    const response = await fetch(httpUrl, {
+      headers: {
+        Authorization: `Bearer ${client.getAccessToken()}`,
+      },
+    });
     if (!response.ok)
       throw new Error(`Failed to fetch audio file: ${response.statusText}`);
 
@@ -196,7 +200,15 @@ export const enableSpeechToText = () => {
       log("Audio message content: %O", event.getContent());
 
       const contentUrl = event.getContent().url;
-      const httpUrl = client.mxcUrlToHttp(contentUrl);
+      const httpUrl = client.mxcUrlToHttp(
+        contentUrl,
+        /*width=*/ undefined, // part of the thumbnail API. Use as required.
+        /*height=*/ undefined, // part of the thumbnail API. Use as required.
+        /*resizeMethod=*/ undefined, // part of the thumbnail API. Use as required.
+        /*allowDirectLinks=*/ false, // should generally be left `false`.
+        /*allowRedirects=*/ true, // implied supported with authentication
+        /*useAuthentication=*/ true // the flag we're after in this example
+      );
 
       log("Converted content URL to HTTP URL: %s", httpUrl);
 

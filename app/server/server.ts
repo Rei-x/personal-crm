@@ -3,7 +3,7 @@ import * as trpcExpress from "@trpc/server/adapters/express";
 import cors from "cors";
 import { client } from "./services/matrix";
 import { appRouter } from "./routers/app";
-// import { enableSpeechToText } from "./matrix/speechToText";
+import { enableSpeechToText } from "./matrix/speechToText";
 
 import { boss } from "./services/pgboss";
 import { imageApi } from "./api/image";
@@ -11,7 +11,8 @@ import { scheduleNotificationJob } from "@/jobs/scheduleNotification";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 
-// enableSpeechToText();
+enableSpeechToText();
+
 await client.startClient({
   disablePresence: true,
 });
