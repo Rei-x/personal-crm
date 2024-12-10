@@ -162,11 +162,12 @@ function Room() {
       <div className="w-[600px]">
         <Chat
           roomId={room.id}
+          roomPeople={room.people}
           messages={[
             ...room.events
               .filter((e) => e.getType() === EventType.RoomMessage)
               .map((e) => ({
-                body: e.getContent().body as string,
+                body: JSON.stringify(e.getContent(), null, 2) as string,
                 messageId: e.getId() ?? "",
                 userId: e.getSender() ?? "",
                 timestamp: e.getDate() ?? new Date(),

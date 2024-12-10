@@ -4,13 +4,15 @@ export const Avatar = ({
   roomId,
   userId,
   username,
+  className,
 }: {
   roomId?: string;
   userId?: string;
   username?: string;
+  className?: string;
 }) => {
   return (
-    <ShadAvatar>
+    <ShadAvatar className={className}>
       <AvatarImage
         src={`${window.ENV.API_URL}/${userId ? "user-" : ""}image/${
           userId ?? roomId

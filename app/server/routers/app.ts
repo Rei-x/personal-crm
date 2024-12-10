@@ -126,6 +126,13 @@ export const appRouter = router({
           name: room.name,
           id: room.roomId,
           events: eventsCopy,
+          people: Object.entries(
+            (await client.getJoinedRoomMembers(roomId)).joined
+          ).map(([userId, { avatar_url, display_name }]) => ({
+            id: userId,
+            avatarUrl: avatar_url,
+            name: display_name,
+          })),
           scheduledMessages: await scheduleMessage.getJobs().then((jobs) =>
             jobs
               .filter((j) => j.data.roomId === roomId)

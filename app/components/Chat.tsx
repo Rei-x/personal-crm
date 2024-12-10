@@ -22,7 +22,9 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
-
+// import "./Chat.less";
+// import Option from "rc-mentions/lib/Option";
+import { Mention } from "react-mentions";
 const isMe = (userId: string | null) => {
   return window.ENV.MATRIX_USER_ID === userId;
 };
@@ -46,8 +48,13 @@ type ScheduledMessage = Message & {
 export const Chat = ({
   roomId,
   messages,
+  roomPeople,
 }: {
   roomId: string;
+  roomPeople: {
+    id: string;
+    name: string;
+  }[];
   messages: (TextMessage | ScheduledMessage)[];
 }) => {
   const { revalidate } = useRevalidator();
@@ -84,7 +91,7 @@ export const Chat = ({
   }, [messages]);
 
   return (
-    <div className="flex-1  w-full  p-4 space-y-4 rounded-lg border border-dashed shadow-sm">
+    <div className="flex-1 w-full p-4 space-y-4 rounded-lg border border-dashed shadow-sm">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -172,7 +179,28 @@ export const Chat = ({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Tutaj są wiadomości..."
             className="min-h-4 rounded-r-none"
-          />
+          >
+            <Mention
+              trigger="@"
+              markup={'<a href="__id__">__display__</a>'}
+              data={roomPeople.map((r) => ({
+                id: r.id,
+                display: r.name,
+              }))}
+              displayTransform={(id, display) => `@${display}`}
+              renderSuggestion={(item) => (
+                <div className="flex gap-2">
+                  <Avatar className="w-5 h-5" userId={item.id as string} />
+                  {item.display}
+                </div>
+              )}
+              style={{
+                backgroundColor: "#cee4e5",
+                fontWeight: "bold",
+                color: "#000",
+              }}
+            />
+          </ChatInput>
           <Button
             size="sm"
             loading={sendMessage.isPending}

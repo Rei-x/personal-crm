@@ -9,4 +9,14 @@ export const client = sdk.createClient({
   accessToken: env.MATRIX_ACCESS_TOKEN,
 });
 
+// export const matrixService = () => {
+//   return {
+//     sendMessageWithMention: (roomId: string, message: string, ) => {
+
+//     }
+//   }
+// }
+
+// {"msgtype":"m.text","body":"Wojciech Krzos","format":"org.matrix.custom.html","formatted_body":"<a href=\"https://matrix.to/#/@discord_1210723660718018570:matrix.suzuya.dev\">Wojciech Krzos</a>","m.mentions":{"user_ids":["@discord_1210723660718018570:matrix.suzuya.dev"]}}
+
 export { sdk };
