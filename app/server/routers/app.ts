@@ -12,6 +12,7 @@ import {
 import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 import { MsgType } from "matrix-js-sdk";
+import { lidlPlusClient } from "../services/lidlPlus/client";
 
 const loggedProcedure = publicProcedure.use(async (opts) => {
   const start = Date.now();
@@ -177,6 +178,17 @@ export const appRouter = router({
           return aMessage.origin_server_ts > bMessage.origin_server_ts ? -1 : 1;
         });
     }),
+  }),
+  lidl: router({
+    getReceipt: loggedProcedure
+      .input(
+        z.object({
+          id: z.string(),
+        })
+      )
+      .query(async ({ input: { id } }) => {
+        return lidlPlusClient.receipt(id);
+      }),
   }),
 });
 
