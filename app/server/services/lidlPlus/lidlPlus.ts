@@ -265,16 +265,16 @@ export class LidlPlusApi {
       }
     );
 
-    let tickets = response.data.tickets;
-    const totalPages = Math.ceil(response.data.totalCount / response.data.size);
+    const tickets = response.data.tickets;
+    // const totalPages = Math.ceil(response.data.totalCount / response.data.size);
 
-    for (let i = 2; i <= totalPages; i++) {
-      const pageResponse = await axios.get(`${url}?pageNumber=${i}`, {
-        headers,
-        timeout: LidlPlusApi.TIMEOUT,
-      });
-      tickets = tickets.concat(pageResponse.data.tickets);
-    }
+    // for (let i = 2; i <= totalPages; i++) {
+    //   const pageResponse = await axios.get(`${url}?pageNumber=${i}`, {
+    //     headers,
+    //     timeout: LidlPlusApi.TIMEOUT,
+    //   });
+    //   tickets = tickets.concat(pageResponse.data.tickets);
+    // }
 
     return ReceiptListSchema.parse(tickets);
   }
