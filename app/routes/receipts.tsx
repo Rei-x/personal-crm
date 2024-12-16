@@ -1,70 +1,66 @@
-import { Button } from "@/components/ui/button";
-import { trpc } from "@/lib/trpc";
-import { lidlPlusClient } from "@/server/services/lidlPlus/client";
+import { db } from "@/server/db";
 import { useLoaderData } from "@remix-run/react";
-import { useState } from "react";
+import { groupBy, prop, sortBy } from "remeda";
 
 export const loader = async () => {
   return {
-    receipts: await lidlPlusClient.receipts(),
+    receipts: await db.query.receipts.findMany({
+      with: {
+        receiptItems: true,
+      },
+    }),
   };
-};
-
-const Receipt = ({ id }: { id: string }) => {
-  const [shouldFetch, setShouldFetch] = useState(false);
-  const receipt = trpc.lidl.getReceipt.useQuery(
-    {
-      id,
-    },
-    {
-      enabled: shouldFetch,
-    }
-  );
-
-  if (!receipt.data) {
-    return <Button onClick={() => setShouldFetch(true)}>Fetch</Button>;
-  }
-
-  return (
-    <div>
-      <p>{receipt.data.id}</p>
-      <ol>
-        {receipt.data.itemsLine.map((item) => (
-          <li key={item.codeInput}>
-            <details>
-              <summary>
-                {item.name} - {item.quantity} x {item.currentUnitPrice} ={" "}
-                {item.originalAmount}
-              </summary>
-              <pre>{JSON.stringify(item, null, 2)}</pre>
-            </details>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
 };
 
 const Receipts = () => {
   const data = useLoaderData<typeof loader>();
 
+  const groupedByItem = sortBy(
+    Object.entries(
+      groupBy(
+        data.receipts.flatMap((r) => r.receiptItems),
+        (r) => r.name
+      )
+    ).map(([name, items]) => ({
+      name,
+      items: sortBy(items, prop("unitPrice")),
+      count: items.length,
+      sum: items.reduce((acc, item) => acc + parseFloat(item.unitPrice), 0),
+    })),
+    [prop("sum"), "desc"]
+  );
+
   return (
     <div>
       <h1>Paragony</h1>
+      <h2>Grupowane po produkcie</h2>
       <div>
         <ul>
-          {data.receipts.map((r) => (
-            <li key={r.id}>
-              {r.totalAmount}
-
+          {groupedByItem.map((item) => (
+            <li key={item.name}>
+              {item.name} - {Math.round(item.sum)} zł
               <details>
                 <summary>Details</summary>
-                <Receipt id={r.id} />
+                <div>
+                  <ol>
+                    {item.items.map((item) => (
+                      <li key={item.code}>
+                        <details className="ml-2">
+                          <summary>
+                            {item.name} - {item.quantity} x {item.unitPrice}
+                          </summary>
+                          <pre>{JSON.stringify(item, null, 2)}</pre>
+                        </details>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </details>
             </li>
           ))}
         </ul>
       </div>
+      <div></div>
     </div>
   );
 };

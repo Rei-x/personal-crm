@@ -5,8 +5,8 @@ import {
   pgTable,
   boolean,
   integer,
-  decimal,
   serial,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 export const processedEvents = pgTable("processed_events", {
@@ -35,8 +35,8 @@ export const receiptItem = pgTable("receipt_items", {
   name: text().notNull(),
   code: text().notNull(),
   isWeight: boolean().notNull().default(false),
-  unitPrice: integer().notNull(),
-  quantity: integer().notNull(),
+  unitPrice: numeric().notNull(),
+  quantity: numeric().notNull(),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp().$onUpdate(() => new Date()),
 });

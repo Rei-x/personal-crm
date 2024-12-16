@@ -1,3 +1,12 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "localhost",
+      "connectString": "postgres://postgres:hard_password@localhost:5432/postgres"
+    }
+  ]
 }

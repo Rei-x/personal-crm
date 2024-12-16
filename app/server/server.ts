@@ -10,6 +10,7 @@ import { imageApi } from "./api/image";
 import { scheduleNotificationJob } from "@/jobs/scheduleNotification";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
+import { syncLidlReceipts } from "@/jobs/syncLidlReceipts";
 
 enableSpeechToText();
 
@@ -29,6 +30,8 @@ await scheduleMessage.work();
 await enableLidlCoupons.work();
 
 await enableLidlCoupons.schedule("5 * * * *");
+
+await syncLidlReceipts.work();
 
 const api = express();
 
