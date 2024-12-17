@@ -22,16 +22,15 @@ await boss.start();
 boss.on("error", console.error);
 
 await scheduleNotificationJob.work();
-
 await scheduleNotificationJob.schedule("0 10 * * *");
 
 await scheduleMessage.work();
 
 await enableLidlCoupons.work();
-
 await enableLidlCoupons.schedule("5 * * * *");
 
 await syncLidlReceipts.work();
+await syncLidlReceipts.schedule("5 * * * *");
 
 const api = express();
 

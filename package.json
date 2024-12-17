@@ -21,6 +21,7 @@
     "start:remix": "NODE_ENV=production node dist/remix/remix.js",
     "start": "conc -c auto npm:start:*",
     "typecheck": "tsc",
+    "command:sync": "tsx ./app/server/scripts/syncReceipts.ts",
     "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
   "packageManager": "pnpm@9.6.0",
