@@ -43,6 +43,13 @@
       "when": 1725040221975,
       "tag": "0005_loud_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1734362815072,
+      "tag": "0006_harsh_dakota_north",
+      "breakpoints": true
     }
   ]
 }

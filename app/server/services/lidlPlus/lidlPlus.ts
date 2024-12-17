@@ -10,7 +10,6 @@ import { ReceiptListSchema } from "./receiptList";
 import { LotteryOneSchema } from "./lotteryOne";
 import { z } from "zod";
 import { PromotionCards } from "./promotionCards";
-import fs from "fs";
 import { CouponsV2Schema } from "./couponsv2";
 
 export class LidlPlusApi {
@@ -266,9 +265,12 @@ export class LidlPlusApi {
     );
 
     let tickets = response.data.tickets;
-    const totalPages = Math.ceil(response.data.totalCount / response.data.size);
+
+    const totalPages =
+      Math.ceil(response.data.totalCount / response.data.size) + 6;
 
     for (let i = 2; i <= totalPages; i++) {
+      console.log(`Fetching page ${i} of ${totalPages}`);
       const pageResponse = await axios.get(`${url}?pageNumber=${i}`, {
         headers,
         timeout: LidlPlusApi.TIMEOUT,
@@ -357,8 +359,6 @@ export class LidlPlusApi {
       headers,
       timeout: LidlPlusApi.TIMEOUT,
     });
-
-    fs.writeFileSync("coupons.json", JSON.stringify(response.data));
 
     return CouponsListSchema.parse(response.data);
   }

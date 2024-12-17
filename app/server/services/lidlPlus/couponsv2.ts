@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod";
 
 export const AvailabilitySchema = z.object({
   apologizeStatus: z.boolean(),

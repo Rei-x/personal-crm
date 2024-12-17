@@ -51,17 +51,6 @@ export const TotalTaxesSchema = z.object({
 });
 export type TotalTaxes = z.infer<typeof TotalTaxesSchema>;
 
-export const PaymentSchema = z.object({
-  type: z.string(),
-  amount: z.string(),
-  description: z.string(),
-  roundingDifference: z.string(),
-  foreignPayment: z.null(),
-  cardInfo: CardInfoSchema,
-  rawPaymentInformationHTML: z.null(),
-});
-export type Payment = z.infer<typeof PaymentSchema>;
-
 export const ReceiptOneSchema = z.object({
   id: z.string(),
   barCode: z.string(),
@@ -69,7 +58,7 @@ export const ReceiptOneSchema = z.object({
   workstation: z.string(),
   itemsLine: z.array(ItemsLineSchema),
   taxes: z.array(TaxSchema),
-  totalTaxes: TotalTaxesSchema,
+  totalTaxes: TotalTaxesSchema.nullable(),
   couponsUsed: z.array(z.any()),
   returnedTickets: z.array(z.any()),
   isFavorite: z.boolean(),
@@ -78,19 +67,14 @@ export const ReceiptOneSchema = z.object({
   totalAmountNumeric: z.number(),
   store: StoreSchema,
   currency: CurrencySchema,
-  payments: z.array(PaymentSchema),
   tenderChange: z.array(z.any()),
-  fiscalDataAt: z.null(),
-  fiscalDataCZ: z.null(),
-  fiscalDataDe: z.null(),
+
   isEmployee: z.boolean(),
   linesScannedCount: z.number(),
   totalDiscount: z.string(),
   taxExemptTexts: z.string(),
-  ustIdNr: z.null(),
   languageCode: z.string(),
-  operatorId: z.null(),
-  htmlPrintedReceipt: z.null(),
+
   printedReceiptState: z.string(),
   isHtml: z.boolean(),
   hasHtmlDocument: z.boolean(),

@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { Home, Package2, ShoppingCart } from "lucide-react";
+import { Home, Package2, ReceiptIcon, ShoppingCart } from "lucide-react";
 
 import { Link } from "@remix-run/react";
 
@@ -22,6 +22,13 @@ export const Layout = ({ children }: { children: ReactNode }) => {
               >
                 <Home className="h-4 w-4" />
                 Dashboard
+              </Link>
+              <Link
+                to="/receipts"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <ReceiptIcon className="h-4 w-4" />
+                Paragony
               </Link>
               <Link
                 to="/lidl"

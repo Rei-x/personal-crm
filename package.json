@@ -21,6 +21,7 @@
     "start:remix": "NODE_ENV=production node dist/remix/remix.js",
     "start": "conc -c auto npm:start:*",
     "typecheck": "tsc",
+    "command:sync": "tsx ./app/server/scripts/syncReceipts.ts",
     "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
   "packageManager": "pnpm@9.6.0",
@@ -105,6 +106,7 @@
     "react-resizable-panels": "^2.1.4",
     "recharts": "^2.13.0",
     "remark-gfm": "^4.0.0",
+    "remeda": "^2.17.4",
     "remix-hook-form": "^5.1.1",
     "seedrandom": "^3.0.5",
     "sonner": "^1.5.0",
