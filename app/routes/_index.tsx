@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import type { RouterOutputs } from "@/server/routers/app";
-import { Link, Outlet } from "@remix-run/react";
+import { Link, Outlet } from "react-router";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 

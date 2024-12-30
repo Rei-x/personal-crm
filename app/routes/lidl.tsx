@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { lidlPlusClient } from "@/server/services/lidlPlus/client";
 import type { Coupon } from "@/server/services/lidlPlus/coupons";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useRevalidator } from "@remix-run/react";
+import type { ActionFunctionArgs } from "react-router";
+import { useRevalidator } from "react-router";
 import { Check, Ticket, TicketCheck } from "lucide-react";
 import { zfd } from "zod-form-data";
+import type { Route } from "./+types/lidl";
 
 export const loader = async () => {
   return {
@@ -93,8 +94,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return new Response("Invalid action", { status: 400 });
 };
 
-const LidlCoupons = () => {
-  const data = useLoaderData<typeof loader>();
+const LidlCoupons = ({ loaderData: data }: Route.ComponentProps) => {
   const { revalidate } = useRevalidator();
   const mut = trpc.enableLidlCoupons.useMutation({
     onSettled: () => {

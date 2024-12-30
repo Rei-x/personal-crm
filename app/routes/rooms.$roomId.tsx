@@ -11,8 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { db } from "@/server/db";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, json } from "@remix-run/react";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { Form } from "react-router";
 import { getValidatedFormData, useRemixForm } from "remix-hook-form";
 import { z } from "zod";
 import { roomSettings } from "@/server/schema";
@@ -52,7 +52,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     receivedValues: defaultValues,
   } = await getValidatedFormData<z.infer<typeof schema>>(request, resolver);
   if (errors) {
-    return json({ errors, defaultValues });
+    return { errors, defaultValues };
   }
 
   return db

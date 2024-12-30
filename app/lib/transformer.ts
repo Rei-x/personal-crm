@@ -1,6 +1,6 @@
 import { SuperJSON, deserialize, type SuperJSONResult } from "superjson";
 import { MatrixEvent, type IEvent } from "matrix-js-sdk";
-import { useLoaderData as useRemixLoaderData } from "@remix-run/react";
+import { useLoaderData as useRemixLoaderData } from "react-router";
 import { useMemo } from "react";
 
 // @ts-expect-error ??? DASDASDSAD

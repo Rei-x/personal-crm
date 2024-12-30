@@ -1,6 +1,5 @@
 import {
   isRouteErrorResponse,
-  json,
   Links,
   Meta,
   Outlet,
@@ -10,7 +9,7 @@ import {
   useNavigation,
   useRouteError,
   useRouteLoaderData,
-} from "@remix-run/react";
+} from "react-router";
 import "./globals.css";
 import { env } from "./server/env";
 import { pl } from "date-fns/locale/pl";
@@ -18,7 +17,7 @@ import { setDefaultOptions } from "date-fns";
 import { Providers } from "./components/Providers";
 import nprogress from "nprogress";
 import nProgressStyles from "nprogress/nprogress.css?url";
-import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import type { LinksFunction, MetaFunction } from "react-router";
 import { useEffect, useMemo } from "react";
 import { Layout as MyLayout } from "@/components/Layout";
 
@@ -40,12 +39,12 @@ export async function loader() {
     ENV: { MATRIX_USER_ID: env.MATRIX_USER_ID, API_URL: env.API_URL },
     isServer: true,
   };
-  return json({
+  return {
     ENV: {
       MATRIX_USER_ID: env.MATRIX_USER_ID,
       API_URL: env.API_URL,
     },
-  });
+  };
 }
 
 const useProgress = () => {

@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { Home, Package2, ReceiptIcon, ShoppingCart } from "lucide-react";
 
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   return (
