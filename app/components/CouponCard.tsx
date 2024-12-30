@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, TagIcon } from "lucide-react";
-import { Form } from "@remix-run/react";
+import { Form } from "react-router";
 
 interface CouponProps {
   id: string;
@@ -16,8 +16,8 @@ interface CouponProps {
   image: string;
   offerTitle: string;
   title: string;
-  startValidityDate: string;
-  endValidityDate: string;
+  startValidityDate: Date;
+  endValidityDate: Date;
   isActivated: boolean;
   source: string;
   tagSpecial?: string;
@@ -32,18 +32,14 @@ export function CouponCard({
   image = "https://lidlplusprod.blob.core.windows.net/images/coupons/PL/IDISC0000326402.png?t=1725369394",
   offerTitle = "20 ZŁ RABATU*",
   title = "*na zakupy za min. 200 zł",
-  startValidityDate = "2024-09-06T22:30:00.000Z",
-  endValidityDate = "2024-09-07T21:59:00.000Z",
+  startValidityDate,
+  endValidityDate,
   isActivated = false,
   tagSpecial,
   source,
   isSpecial = false,
   isHappyHour = false,
 }: CouponProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   return (
     <Card className="w-full flex flex-col justify-between max-w-sm h-full mx-auto">
       <div>
@@ -68,8 +64,8 @@ export function CouponCard({
             <div className="flex items-center text-sm text-gray-500">
               <CalendarIcon className="mr-2 h-4 w-4" />
               <span>
-                Ważne: {formatDate(startValidityDate)} -{" "}
-                {formatDate(endValidityDate)}
+                Ważne: {startValidityDate.toLocaleDateString()} -{" "}
+                {endValidityDate.toLocaleDateString()}
               </span>
             </div>
             {tagSpecial && (

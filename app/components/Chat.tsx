@@ -10,7 +10,7 @@ import { ChatInput } from "./ui/chat/chat-input";
 import { ChatMessageList } from "./ui/chat/chat-message-list";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
-import { useRevalidator } from "@remix-run/react";
+import { useRevalidator } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
