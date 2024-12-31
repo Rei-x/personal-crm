@@ -1,11 +1,14 @@
 import { Suspense, type ReactNode } from "react";
-import { Home, Package2, ReceiptIcon, ShoppingCart } from "lucide-react";
+import { Package2 } from "lucide-react";
 
 import { Link } from "react-router";
+import { BottomNav } from "./BottomNav";
+import { menuItems } from "./nav/menuItems";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <BottomNav />
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -16,27 +19,16 @@ export const Layout = ({ children }: { children: ReactNode }) => {
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              <Link
-                to="/"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <Link
-                to="/receipts"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <ReceiptIcon className="h-4 w-4" />
-                Paragony
-              </Link>
-              <Link
-                to="/lidl"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Lidl
-              </Link>
+              {menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                >
+                  {item.icon}
+                  {item.title}
+                </Link>
+              ))}
             </nav>
           </div>
         </div>

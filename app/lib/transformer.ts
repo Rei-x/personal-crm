@@ -20,7 +20,7 @@ SuperJSON.registerCustom<MatrixEvent, IEvent>(
 );
 export const transformer = SuperJSON;
 
-const parse = <Data>(superJsonResult: SuperJSONResult) =>
+export const parse = <Data>(superJsonResult: SuperJSONResult) =>
   deserialize(superJsonResult) as Data;
 
 export const useJsonLoaderData = <

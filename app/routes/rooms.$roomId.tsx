@@ -111,7 +111,7 @@ function Room() {
       <ShadForm {...form}>
         <Form
           method="POST"
-          className="w-[400px] mt-8 gap-2 flex flex-col"
+          className="mt-8 gap-2 flex flex-col"
           onSubmit={form.handleSubmit}
         >
           <FormField
@@ -159,7 +159,7 @@ function Room() {
           </Button>
         </Form>
       </ShadForm>
-      <div className="w-[600px]">
+      <div>
         <Chat
           roomId={room.id}
           messages={[

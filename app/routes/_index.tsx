@@ -3,9 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import type { RouterOutputs } from "@/server/routers/app";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
+import { matchPath } from "react-router";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const [data] = trpc.rooms.all.useSuspenseQuery(undefined, {
@@ -13,23 +17,35 @@ export default function Dashboard() {
   });
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 200);
+  const location = useLocation();
+  const hasId = matchPath("/rooms/:id", location.pathname);
+  const isMobile = useIsMobile();
+
   return (
-    <>
-      <div className="flex max-w-screen-sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Chats</CardTitle>
-            <Input
-              placeholder="Kto tym razem?"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </CardHeader>
-          <RoomList data={data} search={debouncedSearch} />
-        </Card>
-      </div>
+    <div className={cn("flex gap-4", isMobile ? "flex-col" : "flex-row")}>
+      {hasId && isMobile ? (
+        <div>
+          <Link to="/rooms" className="flex items-center gap-2 py-4 mb-2">
+            <ChevronLeft /> Powrót
+          </Link>
+        </div>
+      ) : (
+        <div className="flex max-w-screen-sm">
+          <Card>
+            <CardHeader>
+              <CardTitle>Rozmowy</CardTitle>
+              <Input
+                placeholder="Kto tym razem?"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </CardHeader>
+            <RoomList data={data} search={debouncedSearch} />
+          </Card>
+        </div>
+      )}
       <Outlet />
-    </>
+    </div>
   );
 }
 export const RoomList = ({
