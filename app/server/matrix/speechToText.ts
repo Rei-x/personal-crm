@@ -87,20 +87,30 @@ export const enableSpeechToText = () => {
 
     if (!eventId) return;
 
-    await db.transaction(async (tx) => {
+    const { alreadyProcessed } = await db.transaction(async (tx) => {
       const rowEvent = await tx.query.processedEvents.findFirst({
         where: eq(processedEvents.eventId, eventId),
       });
       if (rowEvent) {
         log("Event %s has already been processed", eventId);
 
-        return;
+        return {
+          alreadyProcessed: true,
+        };
       }
 
       await tx.insert(processedEvents).values({
         eventId,
       });
+
+      return {
+        alreadyProcessed: false,
+      };
     });
+
+    if (alreadyProcessed) {
+      return;
+    }
 
     if (
       event.getType() === "m.room.message" &&

@@ -9,7 +9,7 @@ export const loader = async () => {
       with: {
         receiptItems: true,
       },
-      where: (q, o) => o.gte(q.receiptDate, addMonths(new Date(), -1)),
+      where: (q, o) => o.gte(q.receiptDate, addMonths(new Date(), -2)),
     }),
   };
 };
