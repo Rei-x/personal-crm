@@ -35,9 +35,8 @@ const ReceiptsHistory = () => {
 
   const sortedReceipts = sortBy(
     receiptsWithTotals,
-    (receipt) => new Date(receipt.receiptDate ?? new Date()),
-    "desc"
-  );
+    (receipt) => new Date(receipt.receiptDate ?? new Date())
+  ).reverse(); // Reverse to get descending order
 
   return (
     <div className="container mx-auto p-4">
