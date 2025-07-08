@@ -1,7 +1,8 @@
 import { db } from "@/server/db";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { addMonths, differenceInDays, format } from "date-fns";
 import { groupBy, prop, sortBy, uniqueBy } from "remeda";
+import { Button } from "@/components/ui/button";
 
 export const loader = async () => {
   return {
@@ -63,7 +64,14 @@ const Receipts = () => {
 
   return (
     <div>
-      <h1>Paragony</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1>Paragony</h1>
+        <Link to="/receipts/history">
+          <Button variant="outline">
+            Historia paragonów
+          </Button>
+        </Link>
+      </div>
       <div>
         <p>Propozycje:</p>
         <ul className="list-disc">
