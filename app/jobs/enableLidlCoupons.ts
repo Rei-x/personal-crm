@@ -12,10 +12,7 @@ export const enableLidlCoupons = createJob("enableLidlCoupons", async () => {
         promo.validity.end > new Date()
       ) {
         try {
-          await lidlPlusClient.activateCouponPromotionV1(
-            promo.id,
-            promo.source
-          );
+          await lidlPlusClient.activateCouponPromotionV1(promo.id, promo.source);
         } catch (e) {
           console.log(e);
         }

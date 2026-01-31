@@ -1,11 +1,7 @@
 import { CalendarIcon, Clock, SendHorizontal, Trash2 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { format, formatDistanceToNow, startOfDay } from "date-fns";
-import {
-  ChatBubble,
-  ChatBubbleMessage,
-  ChatBubbleTimestamp,
-} from "./ui/chat/chat-bubble";
+import { ChatBubble, ChatBubbleMessage, ChatBubbleTimestamp } from "./ui/chat/chat-bubble";
 import { ChatInput } from "./ui/chat/chat-input";
 import { ChatMessageList } from "./ui/chat/chat-message-list";
 import { Button } from "./ui/button";
@@ -80,14 +76,11 @@ export const Chat = ({
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
-    undefined
-  );
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -108,10 +101,7 @@ export const Chat = ({
             });
         }}
       >
-        <ChatMessageList
-          className="max-h-[600px] overflow-y-scroll"
-          ref={messagesContainerRef}
-        >
+        <ChatMessageList className="max-h-[600px] overflow-y-scroll" ref={messagesContainerRef}>
           {messages
             .filter((m) => m.userId)
             .map((message) =>
@@ -123,9 +113,7 @@ export const Chat = ({
                   <Avatar userId={message.userId ?? ""} />
                   <ChatBubbleMessage>
                     <Markdown>{message.body}</Markdown>
-                    <ChatBubbleTimestamp
-                      timestamp={format(message.timestamp, "HH:mm")}
-                    />
+                    <ChatBubbleTimestamp timestamp={format(message.timestamp, "HH:mm")} />
                   </ChatBubbleMessage>
                 </ChatBubble>
               ) : (
@@ -139,10 +127,9 @@ export const Chat = ({
                       <ChatBubbleMessage>
                         <Markdown>{message.body}</Markdown>
                         <ChatBubbleTimestamp
-                          timestamp={`Wyśle za ${formatDistanceToNow(
-                            message.scheduledDate,
-                            { addSuffix: true }
-                          )} o ${format(message.timestamp, "HH:mm")}`}
+                          timestamp={`Wyśle za ${formatDistanceToNow(message.scheduledDate, {
+                            addSuffix: true,
+                          })} o ${format(message.timestamp, "HH:mm")}`}
                         />
                       </ChatBubbleMessage>
                     </ContextMenuTrigger>

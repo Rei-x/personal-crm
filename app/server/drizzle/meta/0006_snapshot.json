@@ -107,12 +107,8 @@
           "name": "receipt_items_receiptId_receipts_id_fk",
           "tableFrom": "receipt_items",
           "tableTo": "receipts",
-          "columnsFrom": [
-            "receiptId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["receiptId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }

@@ -17,12 +17,9 @@ export class LidlPlusApi {
   private static readonly AUTH_API = "https://accounts.lidl.com";
   private static readonly TICKET_API = "https://tickets.lidlplus.com/api/v2";
   private static readonly COUPONS_API = "https://coupons.lidlplus.com/api";
-  private static readonly LOTTERIES_API =
-    "https://purchaselottery.lidlplus.com/api";
-  private static readonly COUPONS_V1_API =
-    "https://coupons.lidlplus.com/app/api/";
-  private static readonly PROFILE_API =
-    "https://profile.lidlplus.com/profile/api";
+  private static readonly LOTTERIES_API = "https://purchaselottery.lidlplus.com/api";
+  private static readonly COUPONS_V1_API = "https://coupons.lidlplus.com/app/api/";
+  private static readonly PROFILE_API = "https://profile.lidlplus.com/profile/api";
   private static readonly APP = "com.lidl.eci.lidlplus";
   private static readonly OS = "Android";
   private static readonly TIMEOUT = 10000;
@@ -68,9 +65,7 @@ export class LidlPlusApi {
       language: `${this.language}-${this.country}`,
     });
 
-    this.loginUrl = `${
-      LidlPlusApi.AUTH_API
-    }/connect/authorize?${params.toString()}`;
+    this.loginUrl = `${LidlPlusApi.AUTH_API}/connect/authorize?${params.toString()}`;
     return this.loginUrl;
   }
 
@@ -79,9 +74,7 @@ export class LidlPlusApi {
   }
 
   private async auth(payload: Record<string, string>): Promise<void> {
-    const defaultSecret = Buffer.from(
-      `${LidlPlusApi.CLIENT_ID}:secret`
-    ).toString("base64");
+    const defaultSecret = Buffer.from(`${LidlPlusApi.CLIENT_ID}:secret`).toString("base64");
     const headers = {
       Authorization: `Basic ${defaultSecret}`,
       "content-type": "application/x-www-form-urlencoded",
@@ -130,14 +123,10 @@ export class LidlPlusApi {
     await page.click("button");
   }
 
-  private async parseCode(
-    page: Page,
-    acceptLegalTerms = true
-  ): Promise<string> {
+  private async parseCode(page: Page, acceptLegalTerms = true): Promise<string> {
     const response = await page.waitForResponse(
       (response) =>
-        response.url().includes(`${LidlPlusApi.AUTH_API}/connect`) &&
-        response.status() === 302
+        response.url().includes(`${LidlPlusApi.AUTH_API}/connect`) && response.status() === 302
     );
     const location = response.headers()["location"] || "";
 
@@ -183,9 +172,7 @@ export class LidlPlusApi {
     const response = await page.waitForResponse((response) =>
       response.url().includes(`${LidlPlusApi.AUTH_API}/Account/Login`)
     );
-    if (
-      !response.headers()["location"]?.includes("/connect/authorize/callback")
-    ) {
+    if (!response.headers()["location"]?.includes("/connect/authorize/callback")) {
       await page.click(`${verifyMode} button`);
       if (verifyTokenFunc) {
         const verifyCode = await verifyTokenFunc();
@@ -231,10 +218,7 @@ export class LidlPlusApi {
   }
 
   private async getDefaultHeaders(): Promise<Record<string, string>> {
-    if (
-      (!this.token && this.refreshToken) ||
-      (this.expires && new Date() >= this.expires)
-    ) {
+    if ((!this.token && this.refreshToken) || (this.expires && new Date() >= this.expires)) {
       await this.renewToken();
     }
     if (!this.token) {
@@ -256,18 +240,14 @@ export class LidlPlusApi {
     const url = `${LidlPlusApi.TICKET_API}/${this.country}/tickets`;
     const headers = await this.getDefaultHeaders();
 
-    const response = await axios.get(
-      `${url}?pageNumber=1&onlyFavorite=${onlyFavorite}`,
-      {
-        headers,
-        timeout: LidlPlusApi.TIMEOUT,
-      }
-    );
+    const response = await axios.get(`${url}?pageNumber=1&onlyFavorite=${onlyFavorite}`, {
+      headers,
+      timeout: LidlPlusApi.TIMEOUT,
+    });
 
     let tickets = response.data.tickets;
 
-    const totalPages =
-      Math.ceil(response.data.totalCount / response.data.size) + 6;
+    const totalPages = Math.ceil(response.data.totalCount / response.data.size) + 6;
 
     for (let i = 2; i <= totalPages; i++) {
       console.log(`Fetching page ${i} of ${totalPages}`);

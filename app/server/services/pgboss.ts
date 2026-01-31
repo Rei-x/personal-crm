@@ -1,8 +1,4 @@
-import pgBoss, {
-  type ScheduleOptions,
-  type SendOptions,
-  type WorkHandler,
-} from "pg-boss";
+import pgBoss, { type ScheduleOptions, type SendOptions, type WorkHandler } from "pg-boss";
 import { env } from "../env";
 import { db } from "../db";
 
@@ -41,8 +37,7 @@ export const createJob = <T extends object | undefined>(
     getJobs: async () => {
       return db.query.job
         .findMany({
-          where: (q) =>
-            and(eq(q.name, name), inArray(q.state, ["active", "created"])),
+          where: (q) => and(eq(q.name, name), inArray(q.state, ["active", "created"])),
         })
         .then((jobs) =>
           jobs.map((j) => ({

@@ -1,13 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-  text,
-  timestamp,
-  pgTable,
-  boolean,
-  integer,
-  serial,
-  numeric,
-} from "drizzle-orm/pg-core";
+import { text, timestamp, pgTable, boolean, integer, serial, numeric } from "drizzle-orm/pg-core";
 
 export const processedEvents = pgTable("processed_events", {
   eventId: text("eventId").primaryKey(),
@@ -18,9 +10,7 @@ export const processedEvents = pgTable("processed_events", {
 
 export const roomSettings = pgTable("room_settings", {
   roomId: text("roomId").primaryKey(),
-  transcriptionEnabled: boolean("transcriptionEnabled")
-    .notNull()
-    .default(false),
+  transcriptionEnabled: boolean("transcriptionEnabled").notNull().default(false),
   howOftenInSeconds: integer("howOftenInSeconds"),
 });
 

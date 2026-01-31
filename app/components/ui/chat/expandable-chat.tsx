@@ -26,8 +26,7 @@ const chatConfig = {
   },
   states: {
     open: "pointer-events-auto opacity-100 visible scale-100 translate-y-0",
-    closed:
-      "pointer-events-none opacity-0 invisible scale-100 sm:translate-y-5",
+    closed: "pointer-events-none opacity-0 invisible scale-100 sm:translate-y-5",
   },
 };
 
@@ -51,10 +50,7 @@ const ExpandableChat: React.FC<ExpandableChatProps> = ({
   const toggleChat = () => setIsOpen(!isOpen);
 
   return (
-    <div
-      className={cn(`fixed ${chatConfig.positions[position]} z-50`, className)}
-      {...props}
-    >
+    <div className={cn(`fixed ${chatConfig.positions[position]} z-50`, className)} {...props}>
       <div
         ref={chatRef}
         className={cn(
@@ -75,11 +71,7 @@ const ExpandableChat: React.FC<ExpandableChatProps> = ({
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <ExpandableChatToggle
-        icon={icon}
-        isOpen={isOpen}
-        toggleChat={toggleChat}
-      />
+      <ExpandableChatToggle icon={icon} isOpen={isOpen} toggleChat={toggleChat} />
     </div>
   );
 };
@@ -90,10 +82,7 @@ const ExpandableChatHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className,
   ...props
 }) => (
-  <div
-    className={cn("flex items-center justify-between p-4 border-b", className)}
-    {...props}
-  />
+  <div className={cn("flex items-center justify-between p-4 border-b", className)} {...props} />
 );
 
 ExpandableChatHeader.displayName = "ExpandableChatHeader";
@@ -112,8 +101,7 @@ const ExpandableChatFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 
 ExpandableChatFooter.displayName = "ExpandableChatFooter";
 
-interface ExpandableChatToggleProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ExpandableChatToggleProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
   isOpen: boolean;
   toggleChat: () => void;
@@ -135,19 +123,10 @@ const ExpandableChatToggle: React.FC<ExpandableChatToggleProps> = ({
     )}
     {...props}
   >
-    {isOpen ? (
-      <X className="h-6 w-6" />
-    ) : (
-      icon || <MessageCircle className="h-6 w-6" />
-    )}
+    {isOpen ? <X className="h-6 w-6" /> : icon || <MessageCircle className="h-6 w-6" />}
   </Button>
 );
 
 ExpandableChatToggle.displayName = "ExpandableChatToggle";
 
-export {
-  ExpandableChat,
-  ExpandableChatHeader,
-  ExpandableChatBody,
-  ExpandableChatFooter,
-};
+export { ExpandableChat, ExpandableChatHeader, ExpandableChatBody, ExpandableChatFooter };

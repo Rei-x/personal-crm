@@ -100,9 +100,7 @@ const handleImageRequest = async ({
 const api = express();
 
 api.get("/health", (_req, res) => {
-  res
-    .status(client.isLoggedIn() ? 200 : 500)
-    .send(client.isLoggedIn() ? "OK" : "Error");
+  res.status(client.isLoggedIn() ? 200 : 500).send(client.isLoggedIn() ? "OK" : "Error");
 });
 
 api.get("/rooms", async (_req, res) => {

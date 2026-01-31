@@ -23,16 +23,11 @@ const chatBubbleVariant = cva("flex gap-2 max-w-[60%] items-end relative", {
 });
 
 interface ChatBubbleProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof chatBubbleVariant> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chatBubbleVariant> {}
 
 const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(
   ({ className, variant, layout, children, ...props }, ref) => (
-    <div
-      className={cn(chatBubbleVariant({ variant, layout, className }))}
-      ref={ref}
-      {...props}
-    >
+    <div className={cn(chatBubbleVariant({ variant, layout, className }))} ref={ref} {...props}>
       {children}
     </div>
   )
@@ -46,11 +41,7 @@ interface ChatBubbleAvatarProps {
   className?: string;
 }
 
-const ChatBubbleAvatar: React.FC<ChatBubbleAvatarProps> = ({
-  src,
-  fallback,
-  className,
-}) => (
+const ChatBubbleAvatar: React.FC<ChatBubbleAvatarProps> = ({ src, fallback, className }) => (
   <Avatar className={className}>
     <AvatarImage src={src} alt="Avatar" />
     <AvatarFallback>{fallback}</AvatarFallback>
@@ -61,8 +52,7 @@ const ChatBubbleAvatar: React.FC<ChatBubbleAvatarProps> = ({
 const chatBubbleMessageVariants = cva("p-4", {
   variants: {
     variant: {
-      received:
-        "bg-secondary text-secondary-foreground rounded-r-lg rounded-tl-lg",
+      received: "bg-secondary text-secondary-foreground rounded-r-lg rounded-tl-lg",
       sent: "bg-primary text-primary-foreground rounded-l-lg rounded-tr-lg",
     },
     layout: {
@@ -77,19 +67,12 @@ const chatBubbleMessageVariants = cva("p-4", {
 });
 
 interface ChatBubbleMessageProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof chatBubbleMessageVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chatBubbleMessageVariants> {
   isLoading?: boolean;
 }
 
-const ChatBubbleMessage = React.forwardRef<
-  HTMLDivElement,
-  ChatBubbleMessageProps
->(
-  (
-    { className, variant, layout, isLoading = false, children, ...props },
-    ref
-  ) => (
+const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProps>(
+  ({ className, variant, layout, isLoading = false, children, ...props }, ref) => (
     <div
       className={cn(
         chatBubbleMessageVariants({ variant, layout, className }),
@@ -111,8 +94,7 @@ const ChatBubbleMessage = React.forwardRef<
 ChatBubbleMessage.displayName = "ChatBubbleMessage";
 
 // ChatBubbleTimestamp
-interface ChatBubbleTimestampProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+interface ChatBubbleTimestampProps extends React.HTMLAttributes<HTMLDivElement> {
   timestamp: string;
 }
 

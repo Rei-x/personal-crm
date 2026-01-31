@@ -57,5 +57,5 @@ describe("EAN", () => {
     const product = await getEanInfo("5900094257808");
 
     expect(product).toBeUndefined();
-  })
+  });
 });

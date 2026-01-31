@@ -60,13 +60,7 @@ function RoomsLayout() {
   );
 }
 
-const RoomList = ({
-  data,
-  search,
-}: {
-  data: RouterOutputs["rooms"]["all"];
-  search: string;
-}) => {
+const RoomList = ({ data, search }: { data: RouterOutputs["rooms"]["all"]; search: string }) => {
   return (
     <CardContent className="grid gap-2 max-h-[750px] overflow-y-scroll">
       {[...data]

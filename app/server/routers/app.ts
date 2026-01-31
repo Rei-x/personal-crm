@@ -4,11 +4,7 @@ import { db } from "../db";
 import { roomSettings } from "../schema";
 import { eq } from "drizzle-orm";
 import { client } from "../services/matrix";
-import {
-  TRPCError,
-  type inferRouterInputs,
-  type inferRouterOutputs,
-} from "@trpc/server";
+import { TRPCError, type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 import { MsgType } from "matrix-js-sdk";
@@ -164,11 +160,8 @@ export const appRouter = router({
           return {
             name: room.name,
             id: room.roomId,
-            latestEvent:
-              eventsCopy[room.getLiveTimeline().getEvents().length - 1]?.event,
-            latestMessage: eventsCopy
-              .reverse()
-              .find((e) => e.getType() === "m.room.message"),
+            latestEvent: eventsCopy[room.getLiveTimeline().getEvents().length - 1]?.event,
+            latestMessage: eventsCopy.reverse().find((e) => e.getType() === "m.room.message"),
           };
         })
         .sort((a, b) => {
@@ -201,9 +194,7 @@ export const appRouter = router({
         return db
           .update(roomSettings)
           .set({
-            howOftenInSeconds: input.howOftenInDays
-              ? input.howOftenInDays * 24 * 60 * 60
-              : null,
+            howOftenInSeconds: input.howOftenInDays ? input.howOftenInDays * 24 * 60 * 60 : null,
             transcriptionEnabled: input.enableTranscriptions,
           })
           .where(eq(roomSettings.roomId, input.roomId));
@@ -269,10 +260,7 @@ export const appRouter = router({
       for (const section of allPromos.sections) {
         for (const promo of section.promotions) {
           if (!promo.isActivated) {
-            await lidlPlusClient.activateCouponPromotionV1(
-              promo.id,
-              promo.source
-            );
+            await lidlPlusClient.activateCouponPromotionV1(promo.id, promo.source);
           }
         }
       }
@@ -288,15 +276,9 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         if (input.isActivated) {
-          await lidlPlusClient.deactiveCouponPromotionV1(
-            input.promotionId,
-            input.source
-          );
+          await lidlPlusClient.deactiveCouponPromotionV1(input.promotionId, input.source);
         } else {
-          await lidlPlusClient.activateCouponPromotionV1(
-            input.promotionId,
-            input.source
-          );
+          await lidlPlusClient.activateCouponPromotionV1(input.promotionId, input.source);
         }
         return null;
       }),

@@ -12,9 +12,7 @@ export const Avatar = ({
   return (
     <ShadAvatar>
       <AvatarImage
-        src={`${window.ENV.API_URL}/${userId ? "user-" : ""}image/${
-          userId ?? roomId
-        }`}
+        src={`${window.ENV.API_URL}/${userId ? "user-" : ""}image/${userId ?? roomId}`}
       />
       <AvatarFallback>{username ?? "?"}</AvatarFallback>
     </ShadAvatar>

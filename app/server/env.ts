@@ -17,8 +17,6 @@ export const env = createEnv({
     LIDL_PLUS_REFRESH_TOKEN: z.string(),
   },
   runtimeEnv: process.env,
-  isServer:
-    typeof window === "undefined" ||
-    ("isServer" in window && window.isServer === true),
+  isServer: typeof window === "undefined" || ("isServer" in window && window.isServer === true),
   emptyStringAsUndefined: true,
 });

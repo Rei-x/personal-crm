@@ -28,8 +28,7 @@ function Receipts() {
         allItems.map((i) => {
           return {
             ...i,
-            name: [...allItems].reverse().find((ai) => ai.code === i.code)
-              ?.name,
+            name: [...allItems].reverse().find((ai) => ai.code === i.code)?.name,
             originalName: i.name,
           };
         }),
@@ -49,8 +48,7 @@ function Receipts() {
         firstBoughtItem: sortedItems[0],
         lastBoughtItem: sortedItems[sortedItems.length - 1],
         sum: items.reduce(
-          (acc, item) =>
-            acc + parseFloat(item.quantity) * parseFloat(item.unitPrice),
+          (acc, item) => acc + parseFloat(item.quantity) * parseFloat(item.unitPrice),
           0
         ),
       };
@@ -67,10 +65,8 @@ function Receipts() {
           {groupedByItem
             .filter(
               (i) =>
-                differenceInDays(
-                  i.lastBoughtItem.receiptDate,
-                  i.firstBoughtItem.receiptDate
-                ) > 7 && i.timesBought > 3
+                differenceInDays(i.lastBoughtItem.receiptDate, i.firstBoughtItem.receiptDate) > 7 &&
+                i.timesBought > 3
             )
             .map((item) => ({
               ...item,
@@ -128,25 +124,19 @@ function Receipts() {
           {groupedByItem
             .filter(
               (i) =>
-                differenceInDays(
-                  i.lastBoughtItem.receiptDate,
-                  i.firstBoughtItem.receiptDate
-                ) > 7
+                differenceInDays(i.lastBoughtItem.receiptDate, i.firstBoughtItem.receiptDate) > 7
             )
             .map((item) => (
               <li key={item.name}>
                 <details>
                   <summary>
-                    {item.name} - {Math.round(item.sum)} zł -{" "}
-                    {item.firstBoughtItem.code}
+                    {item.name} - {Math.round(item.sum)} zł - {item.firstBoughtItem.code}
                   </summary>
                   <div>
                     <p>
                       Count: {item.count}
-                      <br /> First bought:{" "}
-                      {format(item.firstBoughtItem.receiptDate, "dd.MM.yyyy")},
-                      <br /> Last bought:{" "}
-                      {format(
+                      <br /> First bought: {format(item.firstBoughtItem.receiptDate, "dd.MM.yyyy")},
+                      <br /> Last bought: {format(
                         item.lastBoughtItem.receiptDate,
                         "dd.MM.yyyy"
                       )}{" "}
@@ -167,8 +157,7 @@ function Receipts() {
                         <li key={item.code}>
                           <details className="ml-2">
                             <summary>
-                              {item.originalName} - {item.quantity} x{" "}
-                              {item.unitPrice}
+                              {item.originalName} - {item.quantity} x {item.unitPrice}
                             </summary>
                             <pre>{JSON.stringify(item, null, 2)}</pre>
                           </details>

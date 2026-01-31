@@ -77,9 +77,7 @@ function Room() {
         </div>
         <div className="flex items-center mt-2 gap-2">
           <p className="text-sm text-muted-foreground">Ostatnia aktywność:</p>
-          <p className="text-sm">
-            {formatDistanceToNow(room.latestMessageDate)} temu
-          </p>
+          <p className="text-sm">{formatDistanceToNow(room.latestMessageDate)} temu</p>
         </div>
       </div>
       <Form {...form}>
@@ -107,10 +105,7 @@ function Room() {
             render={({ field }) => (
               <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>Włącz transkrypcje</FormLabel>
@@ -118,11 +113,7 @@ function Room() {
               </FormItem>
             )}
           />
-          <Button
-            loading={updateSettings.isPending}
-            className="mt-2 w-full"
-            type="submit"
-          >
+          <Button loading={updateSettings.isPending} className="mt-2 w-full" type="submit">
             Zapisz
           </Button>
         </form>

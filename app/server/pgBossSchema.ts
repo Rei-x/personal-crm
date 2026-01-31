@@ -76,12 +76,8 @@ export const scheduleInPgboss = pgboss.table("schedule", {
   timezone: text("timezone"),
   data: jsonb("data"),
   options: jsonb("options"),
-  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
-  updatedOn: timestamp("updated_on", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  updatedOn: timestamp("updated_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 });
 
 export const subscriptionInPgboss = pgboss.table(
@@ -116,9 +112,7 @@ export const archiveInPgboss = pgboss.table(
     name: text("name").primaryKey().notNull(),
     priority: integer("priority").notNull(),
     data: jsonb("data"),
-    state: customType({ dataType: () => "pgboss.job_state" })(
-      "state"
-    ).notNull(),
+    state: customType({ dataType: () => "pgboss.job_state" })("state").notNull(),
     retryLimit: integer("retry_limit").notNull(),
     retryCount: integer("retry_count").notNull(),
     retryDelay: integer("retry_delay").notNull(),
@@ -196,9 +190,7 @@ export const job = pgboss.table("job", {
   expireIn: interval("expire_in")
     .default(sql`'00:15:00'`)
     .notNull(),
-  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
+  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   completedOn: timestamp("completed_on", {
     withTimezone: true,
     mode: "string",

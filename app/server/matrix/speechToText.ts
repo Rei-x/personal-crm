@@ -15,17 +15,9 @@ import { client, sdk } from "../services/matrix";
 const log = debugLib("app:log");
 const errorLog = debugLib("app:error");
 
-const transcribeAudio = async (
-  httpUrl: string,
-  userDisplayName: string,
-  eventId: string
-) => {
+const transcribeAudio = async (httpUrl: string, userDisplayName: string, eventId: string) => {
   try {
-    log(
-      "Starting transcription for URL: %s, User: %s",
-      httpUrl,
-      userDisplayName
-    );
+    log("Starting transcription for URL: %s, User: %s", httpUrl, userDisplayName);
 
     // Download the audio file using fetch with streaming
     const response = await fetch(httpUrl, {
@@ -33,8 +25,7 @@ const transcribeAudio = async (
         Authorization: `Bearer ${client.getAccessToken()}`,
       },
     });
-    if (!response.ok)
-      throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Failed to fetch audio file: ${response.statusText}`);
 
     const audioFilePath = path.join(env.TEMP_DIR, `${uuidv4()}.ogg`);
     await fs.mkdir(path.dirname(audioFilePath), { recursive: true });
@@ -112,10 +103,7 @@ export const enableSpeechToText = () => {
       return;
     }
 
-    if (
-      event.getType() === "m.room.message" &&
-      event.getContent().msgtype === sdk.MsgType.Text
-    ) {
+    if (event.getType() === "m.room.message" && event.getContent().msgtype === sdk.MsgType.Text) {
       const body = event.getContent().body;
       const roomId = room?.roomId;
       const eventId = event.getId();
@@ -182,10 +170,7 @@ export const enableSpeechToText = () => {
       }
     }
 
-    if (
-      event.getType() === "m.room.message" &&
-      event.getContent().msgtype === sdk.MsgType.Audio
-    ) {
+    if (event.getType() === "m.room.message" && event.getContent().msgtype === sdk.MsgType.Audio) {
       const roomId = room?.roomId;
       if (!roomId) return;
 

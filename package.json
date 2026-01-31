@@ -1,8 +1,8 @@
 {
   "name": "all-in-one-app",
   "private": true,
-  "sideEffects": false,
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "build": "pnpm build:client && pnpm build:server",
     "build:server": "tsup -d dist/server app/server/server.ts",
@@ -16,7 +16,11 @@
     "migrate": "drizzle-kit migrate",
     "docker:build": "docker build -t all-in-one-app .",
     "docker:run": "docker run -p 3000:3000 --env-file=.env all-in-one-app",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "fmt": "oxfmt . '!app/routeTree.gen.ts'",
+    "fmt:check": "oxfmt --check . '!app/routeTree.gen.ts'",
+    "check": "pnpm lint && pnpm fmt:check && pnpm typecheck",
     "start:server": "drizzle-kit migrate && NODE_ENV=production node dist/server/server.js",
     "start": "pnpm start:server",
     "preview": "vite preview",
@@ -24,7 +28,6 @@
     "command:sync": "tsx ./app/server/scripts/syncReceipts.ts",
     "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
-  "packageManager": "pnpm@9.6.0",
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@playwright/browser-chromium": "^1.48.1",
@@ -118,9 +121,6 @@
     "zod-form-data": "^2.0.2"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.2.0",
-    "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.12.0",
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/router-plugin": "^1.95.1",
     "@types/cors": "^2.8.17",
@@ -131,29 +131,31 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/seedrandom": "^3.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "@typescript-eslint/parser": "^8.10.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.19",
-    "eslint": "^9.12.0",
-    "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.10.0",
-    "eslint-plugin-react": "^7.37.1",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "globals": "^15.11.0",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
+    "oxfmt": "^0.27.0",
+    "oxlint": "^1.42.0",
+    "oxlint-tsgolint": "^0.11.4",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "tsup": "^8.3.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.10.0",
     "vite": "^5.4.9",
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.1.3",
     "wait-on": "^8.0.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "oxfmt",
+      "oxlint --type-aware"
+    ],
+    "*.{json,md,css}": [
+      "oxfmt"
+    ]
   },
   "engines": {
     "node": ">=20.0.0"
@@ -161,5 +163,6 @@
   "volta": {
     "node": "20.16.0",
     "pnpm": "9.6.0"
-  }
+  },
+  "packageManager": "pnpm@9.6.0"
 }

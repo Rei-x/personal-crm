@@ -65,10 +65,7 @@ function LidlCoupons() {
                 isActivated: c.isActivated,
               })
             }
-            isToggling={
-              toggleCoupon.isPending &&
-              toggleCoupon.variables?.promotionId === c.id
-            }
+            isToggling={toggleCoupon.isPending && toggleCoupon.variables?.promotionId === c.id}
           />
         ))}
       </div>

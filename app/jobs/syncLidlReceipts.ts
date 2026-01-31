@@ -15,9 +15,7 @@ export const syncLidlReceipts = createJob("syncLidlReceipts", async () => {
 
   const existingReceiptsIds = allReceiptsIds.map((r) => r.id);
 
-  const newReceipts = receiptsData.filter(
-    (r) => !existingReceiptsIds.includes(r.id)
-  );
+  const newReceipts = receiptsData.filter((r) => !existingReceiptsIds.includes(r.id));
 
   const fetchedReceipts: ReceiptOne[] = [];
 

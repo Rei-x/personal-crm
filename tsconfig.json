@@ -1,10 +1,5 @@
 {
-  "include": [
-    "**/*.ts",
-    "**/*.d.ts",
-    "**/*.tsx",
-    "app/routeTree.gen.ts"
-  ],
+  "include": ["**/*.ts", "**/*.d.ts", "**/*.tsx", "app/routeTree.gen.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["vite/client", "./app/global.d.ts"],
