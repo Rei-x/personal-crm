@@ -3,22 +3,18 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { type MenuItem, menuItems } from "./nav/menuItems";
-import { NavLink } from "react-router";
+import { Link } from "@tanstack/react-router";
 
 const MenuItemComponent: React.FC<{ item: MenuItem }> = ({ item }) => {
   return (
-    <NavLink
+    <Link
       to={item.href}
-      className={({ isActive }) =>
-        cn(
-          "flex flex-col items-center gap-1 text-xs py-2 font-medium transition-colors hover:text-primary",
-          isActive && "text-primary"
-        )
-      }
+      className="flex flex-col items-center gap-1 text-xs py-2 font-medium transition-colors hover:text-primary"
+      activeProps={{ className: "text-primary" }}
     >
       {item.icon}
       {item.title}
-    </NavLink>
+    </Link>
   );
 };
 

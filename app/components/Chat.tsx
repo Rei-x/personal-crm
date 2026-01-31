@@ -10,7 +10,6 @@ import { ChatInput } from "./ui/chat/chat-input";
 import { ChatMessageList } from "./ui/chat/chat-message-list";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
-import { useRevalidator } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -50,7 +49,8 @@ export const Chat = ({
   roomId: string;
   messages: (TextMessage | ScheduledMessage)[];
 }) => {
-  const { revalidate } = useRevalidator();
+  const utils = trpc.useUtils();
+  const invalidateRoom = () => utils.rooms.single.invalidate({ roomId });
   const toast = useToast();
   const sendMessage = trpc.sendMessage.useMutation({
     onError: (e) => {
@@ -96,7 +96,7 @@ export const Chat = ({
               setScheduledDate(undefined);
             })
             .finally(() => {
-              revalidate();
+              invalidateRoom();
             });
         }}
       >
@@ -147,7 +147,7 @@ export const Chat = ({
                               id: message.messageId,
                             })
                             .then(async () => {
-                              revalidate();
+                              invalidateRoom();
                             });
                         }}
                       >

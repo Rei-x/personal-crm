@@ -1,21 +1,16 @@
-import { db } from "@/server/db";
-import { useLoaderData } from "react-router";
-import { addMonths, differenceInDays, format } from "date-fns";
+import { createFileRoute } from "@tanstack/react-router";
+import { trpc } from "@/lib/trpc";
+import { differenceInDays, format } from "date-fns";
 import { groupBy, prop, sortBy, uniqueBy } from "remeda";
+import { ReceiptsPageSkeleton } from "@/components/skeletons";
 
-export const loader = async () => {
-  return {
-    receipts: await db.query.receipts.findMany({
-      with: {
-        receiptItems: true,
-      },
-      where: (q, o) => o.gte(q.receiptDate, addMonths(new Date(), -2)),
-    }),
-  };
-};
+export const Route = createFileRoute("/receipts")({
+  component: Receipts,
+  pendingComponent: ReceiptsPageSkeleton,
+});
 
-const Receipts = () => {
-  const data = useLoaderData<typeof loader>();
+function Receipts() {
+  const [data] = trpc.receipts.all.useSuspenseQuery();
 
   const allItems = data.receipts.flatMap((r) =>
     r.receiptItems.map((ri) => ({
@@ -187,6 +182,4 @@ const Receipts = () => {
       <div></div>
     </div>
   );
-};
-
-export default Receipts;
+}

@@ -3,15 +3,11 @@
     "**/*.ts",
     "**/*.d.ts",
     "**/*.tsx",
-    "**/.server/**/*.ts",
-    "**/.server/**/*.tsx",
-    "**/.client/**/*.ts",
-    "**/.client/**/*.tsx",
-    ".react-router/types/**/*"
+    "app/routeTree.gen.ts"
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["@react-router/node", "vite/client", "./app/global.d.ts"],
+    "types": ["vite/client", "./app/global.d.ts"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -23,12 +19,9 @@
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./app/*"]
     },
-    "rootDirs": [".", "./.react-router/types"],
-    // Vite takes care of building everything, not tsc.
     "noEmit": true
   }
 }

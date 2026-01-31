@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -6,77 +7,40 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  ShadForm,
+  Form,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { db } from "@/server/db";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form } from "react-router";
-import { getValidatedFormData, useRemixForm } from "remix-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { roomSettings } from "@/server/schema";
-import { eq } from "drizzle-orm";
 import { useEffect } from "react";
-import { trpcServerClient } from "@/lib/trpc.server";
+import { trpc } from "@/lib/trpc";
 import { Avatar } from "@/components/Avatar";
 import { formatDistanceToNow } from "date-fns";
-import { useJsonLoaderData } from "@/lib/transformer";
-import { jsonJson } from "@/lib/transformer.server";
 import { Chat } from "@/components/Chat";
 import { EventType } from "matrix-js-sdk";
+import { RoomDetailSkeleton } from "@/components/skeletons";
 
-const paramsSchema = z.object({
-  roomId: z.string(),
+export const Route = createFileRoute("/rooms/$roomId")({
+  component: Room,
+  pendingComponent: RoomDetailSkeleton,
 });
 
-export async function loader({ params }: LoaderFunctionArgs) {
-  const { roomId } = paramsSchema.parse(params);
-  return jsonJson({
-    room: await trpcServerClient.rooms.single.query({ roomId }),
-  });
-}
 const schema = z.object({
   howOftenInDays: z.coerce.number().default(0),
   enableTranscriptions: z.coerce.boolean(),
 });
 
-const resolver = zodResolver(schema);
-
-export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const roomId = paramsSchema.parse(params).roomId;
-
-  const {
-    errors,
-    data,
-    receivedValues: defaultValues,
-  } = await getValidatedFormData<z.infer<typeof schema>>(request, resolver);
-  if (errors) {
-    return { errors, defaultValues };
-  }
-
-  return db
-    .update(roomSettings)
-    .set({
-      howOftenInSeconds: data.howOftenInDays
-        ? data.howOftenInDays * 24 * 60 * 60
-        : null,
-      transcriptionEnabled: data.enableTranscriptions,
-    })
-    .where(eq(roomSettings.roomId, roomId));
-};
-
 function Room() {
-  const { room } = useJsonLoaderData<typeof loader>();
+  const { roomId } = Route.useParams();
 
-  const form = useRemixForm<z.infer<typeof schema>>({
+  const [room] = trpc.rooms.single.useSuspenseQuery({ roomId });
+
+  const updateSettings = trpc.rooms.updateSettings.useMutation();
+
+  const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     mode: "onSubmit",
-    submitHandlers: {
-      onInvalid: (errors) => {
-        console.log(errors);
-      },
-    },
     defaultValues: {
       enableTranscriptions: room.settings?.transcriptionEnabled ?? false,
       howOftenInDays: room.settings?.howOftenInSeconds
@@ -92,7 +56,15 @@ function Room() {
         ? room.settings?.howOftenInSeconds / (24 * 60 * 60)
         : 0,
     });
-  }, [room]);
+  }, [room, form]);
+
+  const onSubmit = form.handleSubmit((data) => {
+    updateSettings.mutate({
+      roomId,
+      howOftenInDays: data.howOftenInDays,
+      enableTranscriptions: data.enableTranscriptions,
+    });
+  });
 
   return (
     <div>
@@ -108,12 +80,8 @@ function Room() {
           </p>
         </div>
       </div>
-      <ShadForm {...form}>
-        <Form
-          method="POST"
-          className="mt-8 gap-2 flex flex-col"
-          onSubmit={form.handleSubmit}
-        >
+      <Form {...form}>
+        <form className="mt-8 gap-2 flex flex-col" onSubmit={onSubmit}>
           <FormField
             control={form.control}
             name="howOftenInDays"
@@ -149,16 +117,14 @@ function Room() {
             )}
           />
           <Button
-            loading={form.formState.isSubmitting}
+            loading={updateSettings.isPending}
             className="mt-2 w-full"
             type="submit"
-            name="intent"
-            value="ADD"
           >
             Zapisz
           </Button>
-        </Form>
-      </ShadForm>
+        </form>
+      </Form>
       <div>
         <Chat
           roomId={room.id}
@@ -186,5 +152,3 @@ function Room() {
     </div>
   );
 }
-
-export default Room;

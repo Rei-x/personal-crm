@@ -13,8 +13,19 @@ import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 import { MsgType } from "matrix-js-sdk";
 import { lidlPlusClient } from "../services/lidlPlus/client";
+import { addMonths } from "date-fns";
 
-const loggedProcedure = publicProcedure.use(async (opts) => {
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const randomDelay = () => Math.floor(Math.random() * 600) + 200; // 200-800ms
+
+const devDelayProcedure = publicProcedure.use(async (opts) => {
+  if (process.env.NODE_ENV !== "production") {
+    await delay(randomDelay());
+  }
+  return opts.next();
+});
+
+const loggedProcedure = devDelayProcedure.use(async (opts) => {
   const start = Date.now();
 
   const result = await opts.next();
@@ -178,6 +189,37 @@ export const appRouter = router({
           return aMessage.origin_server_ts > bMessage.origin_server_ts ? -1 : 1;
         });
     }),
+    updateSettings: loggedProcedure
+      .input(
+        z.object({
+          roomId: z.string(),
+          howOftenInDays: z.number(),
+          enableTranscriptions: z.boolean(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return db
+          .update(roomSettings)
+          .set({
+            howOftenInSeconds: input.howOftenInDays
+              ? input.howOftenInDays * 24 * 60 * 60
+              : null,
+            transcriptionEnabled: input.enableTranscriptions,
+          })
+          .where(eq(roomSettings.roomId, input.roomId));
+      }),
+  }),
+  receipts: router({
+    all: loggedProcedure.query(async () => {
+      return {
+        receipts: await db.query.receipts.findMany({
+          with: {
+            receiptItems: true,
+          },
+          where: (q, o) => o.gte(q.receiptDate, addMonths(new Date(), -2)),
+        }),
+      };
+    }),
   }),
   lidl: router({
     getReceipt: loggedProcedure
@@ -188,6 +230,75 @@ export const appRouter = router({
       )
       .query(async ({ input: { id } }) => {
         return lidlPlusClient.receipt(id);
+      }),
+    coupons: loggedProcedure.query(async () => {
+      const promos = await lidlPlusClient.couponPromotionsV2();
+      return {
+        coupons: promos.sections.flatMap((s) =>
+          s.promotions.map((p) => ({
+            id: p.id,
+            image: p.image,
+            apologizeStatus: p.availability.apologizeStatus,
+            apologizeText: p.availability.text ?? "",
+            type: p.type,
+            promotionId: p.promotionId,
+            offerTitle: p.discount.title,
+            offerDescriptionShort: p.discount.description,
+            apologizeTitle: p.availability.title ?? "",
+            endValidityDate: p.validity.end,
+            startValidityDate: p.validity.start,
+            firstColor: p.specialPromotion.color ?? "",
+            firstFontColor: p.specialPromotion.fontColor ?? "",
+            hasAsterisk: p.discount.hasAsterisk,
+            isActivated: p.isActivated,
+            isHappyHour: p.isHappyHour,
+            isSegmented: p.isProcessing,
+            source: p.source,
+            isSpecial: p.isSpecial,
+            stores: p.stores,
+            secondaryColor: null,
+            secondaryFontColor: null,
+            tagSpecial: p.specialPromotion.tag ?? "",
+            title: p.title,
+          }))
+        ),
+      };
+    }),
+    activateAll: loggedProcedure.mutation(async () => {
+      const allPromos = await lidlPlusClient.couponPromotionsV2();
+      for (const section of allPromos.sections) {
+        for (const promo of section.promotions) {
+          if (!promo.isActivated) {
+            await lidlPlusClient.activateCouponPromotionV1(
+              promo.id,
+              promo.source
+            );
+          }
+        }
+      }
+      return null;
+    }),
+    toggleCoupon: loggedProcedure
+      .input(
+        z.object({
+          promotionId: z.string(),
+          source: z.string(),
+          isActivated: z.boolean(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        if (input.isActivated) {
+          await lidlPlusClient.deactiveCouponPromotionV1(
+            input.promotionId,
+            input.source
+          );
+        } else {
+          await lidlPlusClient.activateCouponPromotionV1(
+            input.promotionId,
+            input.source
+          );
+        }
+        return null;
       }),
   }),
 });

@@ -1,9 +1,10 @@
 import { Suspense, type ReactNode } from "react";
 import { Package2 } from "lucide-react";
 
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 import { BottomNav } from "./BottomNav";
 import { menuItems } from "./nav/menuItems";
+import { PageSkeleton } from "./skeletons";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   return (
@@ -24,6 +25,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
                   key={item.href}
                   to={item.href}
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                  activeProps={{ className: "text-primary" }}
                 >
                   {item.icon}
                   {item.title}
@@ -35,7 +37,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
       </div>
       <div className="flex flex-col">
         <main className="flex flex-1 gap-4 p-4 lg:gap-6 lg:p-6">
-          <Suspense fallback="Loading...">{children}</Suspense>
+          <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
         </main>
       </div>
     </div>

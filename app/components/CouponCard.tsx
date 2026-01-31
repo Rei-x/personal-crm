@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, TagIcon } from "lucide-react";
-import { Form } from "react-router";
 
 interface CouponProps {
   id: string;
@@ -25,10 +24,11 @@ interface CouponProps {
   firstFontColor: string;
   isSpecial: boolean;
   isHappyHour: boolean;
+  onToggle?: () => void;
+  isToggling?: boolean;
 }
 
 export function CouponCard({
-  id,
   image = "https://lidlplusprod.blob.core.windows.net/images/coupons/PL/IDISC0000326402.png?t=1725369394",
   offerTitle = "20 ZŁ RABATU*",
   title = "*na zakupy za min. 200 zł",
@@ -36,9 +36,10 @@ export function CouponCard({
   endValidityDate,
   isActivated = false,
   tagSpecial,
-  source,
   isSpecial = false,
   isHappyHour = false,
+  onToggle,
+  isToggling = false,
 }: CouponProps) {
   return (
     <Card className="w-full flex flex-col justify-between max-w-sm h-full mx-auto">
@@ -79,20 +80,14 @@ export function CouponCard({
       </div>
       <CardFooter className="flex self-end w-full justify-between items-center p-6 bg-gray-50">
         {isHappyHour && <Badge variant="outline">Szczęśliwa godzina</Badge>}
-        <Form action="/lidl" method="POST" className="ml-auto">
-          <input type="hidden" name="promotionId" value={id} />
-          <input type="hidden" name="source" value={source} />
-          {isActivated ? (
-            <input type="hidden" name="isActivated" value="true" />
-          ) : null}
-          <input type="hidden" name="_action" value="activate" />
-          <Button
-            type="submit"
-            variant={isActivated ? "destructive" : "default"}
-          >
-            {isActivated ? "Wyłącz" : "Aktywuj"}
-          </Button>
-        </Form>
+        <Button
+          onClick={onToggle}
+          loading={isToggling}
+          variant={isActivated ? "destructive" : "default"}
+          className="ml-auto"
+        >
+          {isActivated ? "Wyłącz" : "Aktywuj"}
+        </Button>
       </CardFooter>
     </Card>
   );

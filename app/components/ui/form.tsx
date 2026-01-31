@@ -6,16 +6,14 @@ import {
   ControllerProps,
   FieldPath,
   FieldValues,
+  FormProvider,
+  useFormContext,
 } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import {
-  RemixFormProvider,
-  useRemixFormContext as useFormContext,
-} from "remix-hook-form";
 
-const ShadForm = RemixFormProvider;
+const Form = FormProvider;
 
 interface FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
@@ -169,7 +167,7 @@ FormMessage.displayName = "FormMessage";
 
 export {
   useFormField,
-  ShadForm,
+  Form,
   FormItem,
   FormLabel,
   FormControl,

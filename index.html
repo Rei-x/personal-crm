@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jelly App</title>
+    <meta name="description" content="Welcome to Jelly, all in one app of my life!" />
+    <link rel="stylesheet" href="/node_modules/nprogress/nprogress.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Development defaults - in production, these are injected by the server
+      window.ENV = window.ENV || {
+        MATRIX_USER_ID: "",
+        API_URL: "http://localhost:4000/api"
+      };
+    </script>
+    <script type="module" src="/app/main.tsx"></script>
+  </body>
+</html>
