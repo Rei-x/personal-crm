@@ -30,7 +30,7 @@ const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(
     <div className={cn(chatBubbleVariant({ variant, layout, className }))} ref={ref} {...props}>
       {children}
     </div>
-  )
+  ),
 );
 ChatBubble.displayName = "ChatBubble";
 
@@ -76,7 +76,7 @@ const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProp
     <div
       className={cn(
         chatBubbleMessageVariants({ variant, layout, className }),
-        "break-words max-w-full"
+        "wrap-break-word max-w-full",
       )}
       ref={ref}
       {...props}
@@ -89,7 +89,7 @@ const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProp
         children
       )}
     </div>
-  )
+  ),
 );
 ChatBubbleMessage.displayName = "ChatBubbleMessage";
 

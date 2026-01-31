@@ -40,7 +40,7 @@ function RoomsLayout() {
         </div>
       ) : (
         <>
-          <div className="flex max-w-screen-sm">
+          <div className="flex max-w-(--breakpoint-sm)">
             <Card>
               <CardHeader>
                 <CardTitle>Rozmowy</CardTitle>

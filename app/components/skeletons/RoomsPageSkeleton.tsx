@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 export function RoomsPageSkeleton() {
   return (
     <div className="flex gap-4 flex-col md:flex-row">
-      <div className="flex max-w-screen-sm">
+      <div className="flex max-w-(--breakpoint-sm)">
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-24" />

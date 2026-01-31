@@ -58,7 +58,7 @@ const ExpandableChat: React.FC<ExpandableChatProps> = ({
           chatConfig.chatPositions[position],
           chatConfig.dimensions[size],
           isOpen ? chatConfig.states.open : chatConfig.states.closed,
-          className
+          className,
         )}
       >
         {children}
@@ -90,7 +90,7 @@ ExpandableChatHeader.displayName = "ExpandableChatHeader";
 const ExpandableChatBody: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className,
   ...props
-}) => <div className={cn("flex-grow overflow-y-auto", className)} {...props} />;
+}) => <div className={cn("grow overflow-y-auto", className)} {...props} />;
 
 ExpandableChatBody.displayName = "ExpandableChatBody";
 
@@ -119,7 +119,7 @@ const ExpandableChatToggle: React.FC<ExpandableChatToggleProps> = ({
     onClick={toggleChat}
     className={cn(
       "w-14 h-14 rounded-full shadow-md flex items-center justify-center hover:shadow-lg hover:shadow-black/30 transition-all duration-300",
-      className
+      className,
     )}
     {...props}
   >

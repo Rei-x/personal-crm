@@ -85,7 +85,7 @@ export const Chat = ({
   }, [messages]);
 
   return (
-    <div className="flex-1  w-full  p-4 space-y-4 rounded-lg border border-dashed shadow-sm">
+    <div className="flex-1  w-full  p-4 space-y-4 rounded-lg border border-dashed shadow-xs">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -151,7 +151,7 @@ export const Chat = ({
                     </ContextMenuContent>
                   </ContextMenu>
                 </ChatBubble>
-              )
+              ),
             )}
         </ChatMessageList>
         <div className="flex flex-1 items-stretch">
