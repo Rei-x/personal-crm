@@ -9,10 +9,8 @@
       "connectString": "postgres://postgres:hard_password@localhost:5432/postgres"
     }
   ],
-  "oxc.lint.enable": true,
-  "oxc.lint.configPath": ".oxlintrc.json",
-  "oxc.fmt.enable": true,
-  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "oxc.typeAware": true,
+  "oxc.enable": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "[typescript]": {
