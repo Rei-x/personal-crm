@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-ro
 import { Avatar } from "@/components/Avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { trpc } from "@/lib/trpc";
+import { useTRPC } from "@/lib/trpc";
 import type { RouterOutputs } from "@/server/routers/app";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoomsPageSkeleton } from "@/components/skeletons";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/rooms")({
   component: RoomsLayout,
@@ -17,7 +18,9 @@ export const Route = createFileRoute("/rooms")({
 });
 
 function RoomsLayout() {
-  const [data] = trpc.rooms.all.useSuspenseQuery(undefined, {
+  const trpc = useTRPC();
+  const { data } = useSuspenseQuery({
+    ...trpc.rooms.all.queryOptions(),
     refetchInterval: 5000,
   });
   const [search, setSearch] = useState("");

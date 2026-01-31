@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { trpc } from "@/lib/trpc";
+import { useTRPC } from "@/lib/trpc";
 import { differenceInDays, format } from "date-fns";
 import { groupBy, prop, sortBy, uniqueBy } from "remeda";
 import { ReceiptsPageSkeleton } from "@/components/skeletons";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/receipts")({
   component: Receipts,
@@ -10,7 +11,8 @@ export const Route = createFileRoute("/receipts")({
 });
 
 function Receipts() {
-  const [data] = trpc.receipts.all.useSuspenseQuery();
+  const trpc = useTRPC();
+  const { data } = useSuspenseQuery(trpc.receipts.all.queryOptions());
 
   const allItems = data.receipts.flatMap((r) =>
     r.receiptItems.map((ri) => ({

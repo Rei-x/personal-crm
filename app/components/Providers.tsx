@@ -1,16 +1,17 @@
-import { trpc } from "@/lib/trpc";
+import { TRPCProvider } from "@/lib/trpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "./ui/sonner";
 import { Toaster as Toasterv2 } from "./ui/toaster";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { httpBatchLink } from "@trpc/react-query";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { transformer } from "@/lib/transformer";
+import type { AppRouter } from "@/server/routers/app";
 
 export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
-    trpc.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
           url: window.ENV.API_URL + "/trpc",
@@ -20,11 +21,11 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     })
   );
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+    <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         {children} <Toaster /> <Toasterv2 />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
-    </trpc.Provider>
+    </TRPCProvider>
   );
 };

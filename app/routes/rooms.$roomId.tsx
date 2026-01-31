@@ -14,12 +14,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect } from "react";
-import { trpc } from "@/lib/trpc";
+import { useTRPC } from "@/lib/trpc";
 import { Avatar } from "@/components/Avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Chat } from "@/components/Chat";
 import { EventType } from "matrix-js-sdk";
 import { RoomDetailSkeleton } from "@/components/skeletons";
+import { useSuspenseQuery, useMutation } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/rooms/$roomId")({
   component: Room,
@@ -33,10 +34,11 @@ const schema = z.object({
 
 function Room() {
   const { roomId } = Route.useParams();
+  const trpc = useTRPC();
 
-  const [room] = trpc.rooms.single.useSuspenseQuery({ roomId });
+  const { data: room } = useSuspenseQuery(trpc.rooms.single.queryOptions({ roomId }));
 
-  const updateSettings = trpc.rooms.updateSettings.useMutation();
+  const updateSettings = useMutation(trpc.rooms.updateSettings.mutationOptions());
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),

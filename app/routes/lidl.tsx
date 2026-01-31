@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CouponCard } from "@/components/CouponCard";
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/lib/trpc";
+import { useTRPC } from "@/lib/trpc";
 import { Check, Ticket, TicketCheck } from "lucide-react";
 import { LidlPageSkeleton } from "@/components/skeletons";
+import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/lidl")({
   component: LidlCoupons,
@@ -11,16 +12,19 @@ export const Route = createFileRoute("/lidl")({
 });
 
 function LidlCoupons() {
-  const utils = trpc.useUtils();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
-  const [data] = trpc.lidl.coupons.useSuspenseQuery();
+  const { data } = useSuspenseQuery(trpc.lidl.coupons.queryOptions());
 
-  const activateAll = trpc.lidl.activateAll.useMutation({
-    onSuccess: () => utils.lidl.coupons.invalidate(),
+  const activateAll = useMutation({
+    ...trpc.lidl.activateAll.mutationOptions(),
+    onSuccess: () => queryClient.invalidateQueries(trpc.lidl.coupons.queryFilter()),
   });
 
-  const toggleCoupon = trpc.lidl.toggleCoupon.useMutation({
-    onSuccess: () => utils.lidl.coupons.invalidate(),
+  const toggleCoupon = useMutation({
+    ...trpc.lidl.toggleCoupon.mutationOptions(),
+    onSuccess: () => queryClient.invalidateQueries(trpc.lidl.coupons.queryFilter()),
   });
 
   return (

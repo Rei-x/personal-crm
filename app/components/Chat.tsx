@@ -9,7 +9,7 @@ import {
 import { ChatInput } from "./ui/chat/chat-input";
 import { ChatMessageList } from "./ui/chat/chat-message-list";
 import { Button } from "./ui/button";
-import { trpc } from "@/lib/trpc";
+import { useTRPC } from "@/lib/trpc";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -21,6 +21,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "./ui/context-menu";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const isMe = (userId: string | null) => {
   return window.ENV.MATRIX_USER_ID === userId;
@@ -49,10 +50,14 @@ export const Chat = ({
   roomId: string;
   messages: (TextMessage | ScheduledMessage)[];
 }) => {
-  const utils = trpc.useUtils();
-  const invalidateRoom = () => utils.rooms.single.invalidate({ roomId });
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const invalidateRoom = () =>
+    queryClient.invalidateQueries(trpc.rooms.single.queryFilter({ roomId }));
   const toast = useToast();
-  const sendMessage = trpc.sendMessage.useMutation({
+
+  const sendMessage = useMutation({
+    ...trpc.sendMessage.mutationOptions(),
     onError: (e) => {
       toast.toast({
         title: "Failed to send message",
@@ -61,7 +66,9 @@ export const Chat = ({
       });
     },
   });
-  const deleteScheduledMessage = trpc.deleteScheduledMessage.useMutation({
+
+  const deleteScheduledMessage = useMutation({
+    ...trpc.deleteScheduledMessage.mutationOptions(),
     onError: (e) => {
       toast.toast({
         title: "Failed to delete scheduled message",
@@ -70,6 +77,7 @@ export const Chat = ({
       });
     },
   });
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
