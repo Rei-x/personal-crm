@@ -7,6 +7,12 @@ import { roomSettings } from "../schema";
 import { eq } from "drizzle-orm";
 const MAX_AGE = 86400;
 
+const asyncHandler =
+  (fn: (req: express.Request, res: express.Response) => Promise<void>) =>
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    fn(req, res).catch(next);
+  };
+
 const setCacheHeaders = (res: express.Response) => {
   res.setHeader("Cache-Control", `public, max-age=${MAX_AGE}`);
   res.setHeader("Expires", new Date(Date.now() + MAX_AGE * 1000).toUTCString());
@@ -112,52 +118,60 @@ api.get("/rooms", async (_req, res) => {
     rows.map(async ({ roomId }) => ({
       roomId,
       name: client.getRoom(roomId)?.name,
-    }))
+    })),
   );
 
   res.json(roomsNames);
 });
 
-api.get("/image/:roomId", async (req, res) => {
-  const roomId = req.params.roomId;
-  const room = client.getRoom(roomId);
+api.get(
+  "/image/:roomId",
+  asyncHandler(async (req, res) => {
+    const roomId = req.params.roomId;
+    const room = client.getRoom(roomId);
 
-  if (!room) {
-    return sendInitialsAvatar({
+    if (!room) {
+      sendInitialsAvatar({
+        res,
+        initials: getInitials(roomId),
+        seed: roomId,
+      });
+      return;
+    }
+
+    await handleImageRequest({
       res,
-      initials: getInitials(roomId),
-      seed: roomId,
+      id: roomId,
+      getName: () => room.name,
+      getAvatarUrl: () =>
+        room.getAvatarUrl(client.getHomeserverUrl(), 200, 200, "scale") ||
+        room.getAvatarFallbackMember()?.getMxcAvatarUrl(),
     });
-  }
+  }),
+);
 
-  await handleImageRequest({
-    res,
-    id: roomId,
-    getName: () => room.name,
-    getAvatarUrl: () =>
-      room.getAvatarUrl(client.getHomeserverUrl(), 200, 200, "scale") ||
-      room.getAvatarFallbackMember()?.getMxcAvatarUrl(),
-  });
-});
+api.get(
+  "/user-image/:userId",
+  asyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+    const user = client.getUser(userId);
 
-api.get("/user-image/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  const user = client.getUser(userId);
+    if (!user) {
+      sendInitialsAvatar({
+        res,
+        initials: getInitials(userId.split(":")[0].slice(1)),
+        seed: userId,
+      });
+      return;
+    }
 
-  if (!user) {
-    return sendInitialsAvatar({
+    await handleImageRequest({
       res,
-      initials: getInitials(userId.split(":")[0].slice(1)),
-      seed: userId,
+      id: userId,
+      getName: () => user.displayName,
+      getAvatarUrl: () => user.avatarUrl,
     });
-  }
-
-  await handleImageRequest({
-    res,
-    id: userId,
-    getName: () => user.displayName,
-    getAvatarUrl: () => user.avatarUrl,
-  });
-});
+  }),
+);
 
 export const imageApi = api;

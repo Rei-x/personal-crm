@@ -18,7 +18,9 @@ import { useTRPC } from "@/lib/trpc";
 import { Avatar } from "@/components/Avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Chat } from "@/components/Chat";
-import { EventType } from "matrix-js-sdk";
+interface MessageContent {
+  body: string;
+}
 import { RoomDetailSkeleton } from "@/components/skeletons";
 import { useSuspenseQuery, useMutation } from "@tanstack/react-query";
 
@@ -28,7 +30,7 @@ export const Route = createFileRoute("/rooms/$roomId")({
 });
 
 const schema = z.object({
-  howOftenInDays: z.coerce.number().default(0),
+  howOftenInDays: z.coerce.number(),
   enableTranscriptions: z.coerce.boolean(),
 });
 
@@ -63,8 +65,8 @@ function Room() {
   const onSubmit = form.handleSubmit((data) => {
     updateSettings.mutate({
       roomId,
-      howOftenInDays: data.howOftenInDays,
-      enableTranscriptions: data.enableTranscriptions,
+      howOftenInDays: Number(data.howOftenInDays),
+      enableTranscriptions: Boolean(data.enableTranscriptions),
     });
   });
 
@@ -123,9 +125,9 @@ function Room() {
           roomId={room.id}
           messages={[
             ...room.events
-              .filter((e) => e.getType() === EventType.RoomMessage)
+              .filter((e) => e.getType() === "m.room.message")
               .map((e) => ({
-                body: e.getContent().body as string,
+                body: e.getContent<MessageContent>().body,
                 messageId: e.getId() ?? "",
                 userId: e.getSender() ?? "",
                 timestamp: e.getDate() ?? new Date(),

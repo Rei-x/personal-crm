@@ -53,7 +53,7 @@ const ErrorSchema = z.object({
 
 export const getEanInfo = async (ean: string) => {
   const data = await fetch(
-    `https://www.eprodukty.gs1.pl/api/v1/products/product_has_gcp/${ean}/?activeMembershipId=undefined`
+    `https://www.eprodukty.gs1.pl/api/v1/products/product_has_gcp/${ean}/?activeMembershipId=undefined`,
   );
 
   if (data.ok) {

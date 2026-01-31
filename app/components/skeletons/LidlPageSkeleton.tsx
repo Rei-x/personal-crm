@@ -38,7 +38,7 @@ export function LidlPageSkeleton() {
       </div>
       <div className="md:ml-4 mt-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <CouponCardSkeleton key={i} />
+          <CouponCardSkeleton key={`skeleton-${i}`} />
         ))}
       </div>
     </div>

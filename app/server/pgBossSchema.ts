@@ -8,8 +8,6 @@ import {
   jsonb,
   primaryKey,
   uuid,
-  customType,
-  interval,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -26,29 +24,33 @@ export const jobStateInPgboss = pgboss.enum("job_state", [
 
 export const versionInPgboss = pgboss.table("version", {
   version: integer("version").primaryKey().notNull(),
-  maintainedOn: timestamp("maintained_on", {
-    withTimezone: true,
-    mode: "string",
-  }),
   cronOn: timestamp("cron_on", { withTimezone: true, mode: "string" }),
-  monitoredOn: timestamp("monitored_on", {
-    withTimezone: true,
-    mode: "string",
-  }),
+  bamOn: timestamp("bam_on", { withTimezone: true, mode: "string" }),
 });
 
 export const queueInPgboss = pgboss.table(
   "queue",
   {
     name: text("name").primaryKey().notNull(),
-    policy: text("policy"),
-    retryLimit: integer("retry_limit"),
-    retryDelay: integer("retry_delay"),
-    retryBackoff: boolean("retry_backoff"),
-    expireSeconds: integer("expire_seconds"),
-    retentionMinutes: integer("retention_minutes"),
+    policy: text("policy").notNull(),
+    retryLimit: integer("retry_limit").notNull(),
+    retryDelay: integer("retry_delay").notNull(),
+    retryBackoff: boolean("retry_backoff").notNull(),
+    retryDelayMax: integer("retry_delay_max"),
+    expireSeconds: integer("expire_seconds").notNull(),
+    retentionSeconds: integer("retention_seconds").notNull(),
+    deletionSeconds: integer("deletion_seconds").notNull(),
     deadLetter: text("dead_letter"),
-    partitionName: text("partition_name"),
+    partition: boolean("partition").notNull(),
+    tableName: text("table_name").notNull(),
+    deferredCount: integer("deferred_count").default(0).notNull(),
+    queuedCount: integer("queued_count").default(0).notNull(),
+    warningQueued: integer("warning_queued").default(0).notNull(),
+    activeCount: integer("active_count").default(0).notNull(),
+    totalCount: integer("total_count").default(0).notNull(),
+    singletonsActive: text("singletons_active").array(),
+    monitorOn: timestamp("monitor_on", { withTimezone: true, mode: "string" }),
+    maintainOn: timestamp("maintain_on", { withTimezone: true, mode: "string" }),
     createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -64,28 +66,42 @@ export const queueInPgboss = pgboss.table(
         name: "queue_dead_letter_fkey",
       }),
     };
-  }
+  },
 );
 
-export const scheduleInPgboss = pgboss.table("schedule", {
-  name: text("name")
-    .primaryKey()
-    .notNull()
-    .references(() => queueInPgboss.name, { onDelete: "cascade" }),
-  cron: text("cron").notNull(),
-  timezone: text("timezone"),
-  data: jsonb("data"),
-  options: jsonb("options"),
-  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-  updatedOn: timestamp("updated_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-});
+export const scheduleInPgboss = pgboss.table(
+  "schedule",
+  {
+    name: text("name")
+      .notNull()
+      .references(() => queueInPgboss.name, { onDelete: "cascade" }),
+    key: text("key").default("").notNull(),
+    cron: text("cron").notNull(),
+    timezone: text("timezone"),
+    data: jsonb("data"),
+    options: jsonb("options"),
+    createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedOn: timestamp("updated_on", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      schedulePkey: primaryKey({
+        columns: [table.name, table.key],
+        name: "schedule_pkey",
+      }),
+    };
+  },
+);
 
 export const subscriptionInPgboss = pgboss.table(
   "subscription",
   {
-    event: text("event").primaryKey().notNull(),
+    event: text("event").notNull(),
     name: text("name")
-      .primaryKey()
       .notNull()
       .references(() => queueInPgboss.name, { onDelete: "cascade" }),
     createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
@@ -102,105 +118,56 @@ export const subscriptionInPgboss = pgboss.table(
         name: "subscription_pkey",
       }),
     };
-  }
+  },
 );
 
-export const archiveInPgboss = pgboss.table(
-  "archive",
+export const job = pgboss.table(
+  "job",
   {
-    id: uuid("id").primaryKey().notNull(),
-    name: text("name").primaryKey().notNull(),
-    priority: integer("priority").notNull(),
+    id: uuid("id").defaultRandom().notNull(),
+    name: text("name")
+      .notNull()
+      .references(() => queueInPgboss.name, { onDelete: "restrict" }),
+    priority: integer("priority").default(0).notNull(),
     data: jsonb("data"),
-    state: customType({ dataType: () => "pgboss.job_state" })("state").notNull(),
-    retryLimit: integer("retry_limit").notNull(),
-    retryCount: integer("retry_count").notNull(),
-    retryDelay: integer("retry_delay").notNull(),
-    retryBackoff: boolean("retry_backoff").notNull(),
-    startAfter: timestamp("start_after", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
-    startedOn: timestamp("started_on", { withTimezone: true, mode: "string" }),
+    state: jobStateInPgboss("state")
+      .default(sql`'created'::pgboss.job_state`)
+      .notNull(),
+    retryLimit: integer("retry_limit").default(2).notNull(),
+    retryCount: integer("retry_count").default(0).notNull(),
+    retryDelay: integer("retry_delay").default(0).notNull(),
+    retryBackoff: boolean("retry_backoff").default(false).notNull(),
+    retryDelayMax: integer("retry_delay_max"),
+    expireSeconds: integer("expire_seconds").default(900).notNull(),
+    deletionSeconds: integer("deletion_seconds").default(604800).notNull(),
     singletonKey: text("singleton_key"),
     singletonOn: timestamp("singleton_on", { mode: "string" }),
-    expireIn: interval("expire_in").notNull(),
-    createdOn: timestamp("created_on", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
+    groupId: text("group_id"),
+    groupTier: text("group_tier"),
+    startAfter: timestamp("start_after", { withTimezone: true }).defaultNow().notNull(),
+    createdOn: timestamp("created_on", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    startedOn: timestamp("started_on", { withTimezone: true, mode: "string" }),
     completedOn: timestamp("completed_on", {
       withTimezone: true,
       mode: "string",
     }),
-    keepUntil: timestamp("keep_until", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
-    output: jsonb("output"),
-    deadLetter: text("dead_letter"),
-    policy: text("policy"),
-    archivedOn: timestamp("archived_on", { withTimezone: true, mode: "string" })
-      .defaultNow()
+    keepUntil: timestamp("keep_until", { withTimezone: true, mode: "string" })
+      .default(sql`(now() + '336:00:00'::interval)`)
       .notNull(),
+    output: jsonb("output"),
+    deadLetter: text("dead_letter").references(() => queueInPgboss.name, {
+      onDelete: "restrict",
+    }),
+    policy: text("policy"),
   },
   (table) => {
     return {
-      archivePkey: primaryKey({
-        columns: [table.id, table.name],
-        name: "archive_pkey",
+      jobPkey: primaryKey({
+        columns: [table.name, table.id],
+        name: "job_pkey",
       }),
     };
-  }
+  },
 );
-
-export const job = pgboss.table("job", {
-  id: uuid("id").defaultRandom().primaryKey().notNull(),
-  name: text("name")
-    .primaryKey()
-    .notNull()
-    .references(() => queueInPgboss.name, { onDelete: "restrict" }),
-  priority: integer("priority")
-    .default(sql`0`)
-    .notNull(),
-  data: jsonb("data"),
-  state: jobStateInPgboss("state").notNull(),
-  retryLimit: integer("retry_limit")
-    .default(sql`2`)
-    .notNull(),
-  retryCount: integer("retry_count")
-    .default(sql`0`)
-    .notNull(),
-  retryDelay: integer("retry_delay")
-    .default(sql`0`)
-    .notNull(),
-  retryBackoff: boolean("retry_backoff")
-    .default(sql`false`)
-    .notNull(),
-  startAfter: timestamp("start_after", {
-    withTimezone: true,
-  })
-    .defaultNow()
-    .notNull(),
-  startedOn: timestamp("started_on", {
-    withTimezone: true,
-  }),
-  singletonKey: text("singleton_key"),
-  singletonOn: timestamp("singleton_on", { mode: "string" }),
-  expireIn: interval("expire_in")
-    .default(sql`'00:15:00'`)
-    .notNull(),
-  createdOn: timestamp("created_on", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-  completedOn: timestamp("completed_on", {
-    withTimezone: true,
-    mode: "string",
-  }),
-  keepUntil: timestamp("keep_until", { withTimezone: true, mode: "string" })
-    .default(sql`(now() + '14 days'::interval)`)
-    .notNull(),
-  output: jsonb("output"),
-  deadLetter: text("dead_letter").references(() => queueInPgboss.name, {
-    onDelete: "restrict",
-  }),
-  policy: text("policy"),
-});

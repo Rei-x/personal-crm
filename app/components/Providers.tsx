@@ -18,7 +18,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
           transformer,
         }),
       ],
-    })
+    }),
   );
   return (
     <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>

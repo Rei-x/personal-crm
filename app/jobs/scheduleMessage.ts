@@ -11,7 +11,7 @@ export const scheduleMessage = createJob<{
   await client.sendTextMessage(job.data.roomId, job.data.message);
   await ntfy().notify({
     title: `${room?.name} dostał info`,
-    message: `${job.data.message}`,
+    message: job.data.message,
     tags: [NtfyTag.LOUDSPEAKER],
   });
 });

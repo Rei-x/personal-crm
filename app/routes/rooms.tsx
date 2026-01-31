@@ -63,7 +63,9 @@ function RoomsLayout() {
 const RoomList = ({ data, search }: { data: RouterOutputs["rooms"]["all"]; search: string }) => {
   return (
     <CardContent className="grid gap-2 max-h-[750px] overflow-y-scroll">
+      {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types */}
       {[...data]
+        // eslint-disable-next-line unicorn/no-array-sort -- spread creates copy
         ?.sort((a, b) => {
           if (search) {
             if (a.name.toLowerCase().includes(search.toLowerCase())) {
@@ -79,14 +81,17 @@ const RoomList = ({ data, search }: { data: RouterOutputs["rooms"]["all"]; searc
         .map((room) => (
           <Link
             to="/rooms/$roomId"
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types
             params={{ roomId: room.id }}
             key={room.id}
             className="flex hover:bg-slate-300 p-4 rounded-sm transition-colors items-center gap-4"
           >
+            {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types */}
             <Avatar roomId={room.id} username={room.name} />
             <div className="grid gap-1">
               <p className="text-sm font-medium leading-none">{room.name}</p>
               <p className="text-sm truncate text-muted-foreground">
+                {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- matrix-js-sdk types */}
                 {room.latestMessage?.getContent().body}
               </p>
             </div>

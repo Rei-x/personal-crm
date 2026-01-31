@@ -44,7 +44,7 @@ api.use(
   "/trpc",
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-  })
+  }),
 );
 
 const app = express();

@@ -69,7 +69,7 @@ const transcribeAudio = async (httpUrl: string, userDisplayName: string, eventId
 
 export const enableSpeechToText = () => {
   client.on(sdk.RoomEvent.Timeline, async (event, room) => {
-    if (event.getType() === sdk.EventType.RoomMessage) {
+    if (event.getType() === (sdk.EventType.RoomMessage as string)) {
       log("Received message in room: %s", room?.roomId);
       log("Message content: %s", JSON.stringify(event.getContent(), null, 2));
     }
@@ -104,6 +104,7 @@ export const enableSpeechToText = () => {
     }
 
     if (event.getType() === "m.room.message" && event.getContent().msgtype === sdk.MsgType.Text) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types
       const body = event.getContent().body;
       const roomId = room?.roomId;
       const eventId = event.getId();
@@ -194,6 +195,7 @@ export const enableSpeechToText = () => {
       log("Received audio message from user: %s", user.displayName);
       log("Audio message content: %O", event.getContent());
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types
       const contentUrl = event.getContent().url;
       const httpUrl = client.mxcUrlToHttp(
         contentUrl,
@@ -202,7 +204,7 @@ export const enableSpeechToText = () => {
         /*resizeMethod=*/ undefined, // part of the thumbnail API. Use as required.
         /*allowDirectLinks=*/ false, // should generally be left `false`.
         /*allowRedirects=*/ true, // implied supported with authentication
-        /*useAuthentication=*/ true // the flag we're after in this example
+        /*useAuthentication=*/ true, // the flag we're after in this example
       );
 
       log("Converted content URL to HTTP URL: %s", httpUrl);

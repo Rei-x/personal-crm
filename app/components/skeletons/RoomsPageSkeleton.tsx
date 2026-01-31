@@ -12,7 +12,7 @@ export function RoomsPageSkeleton() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4">
+              <div key={`skeleton-${i}`} className="flex items-center gap-4 p-4">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="grid gap-1 flex-1">
                   <Skeleton className="h-4 w-32" />

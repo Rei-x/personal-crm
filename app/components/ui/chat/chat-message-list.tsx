@@ -12,7 +12,7 @@ const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
     >
       {children}
     </div>
-  )
+  ),
 );
 
 ChatMessageList.displayName = "ChatMessageList";

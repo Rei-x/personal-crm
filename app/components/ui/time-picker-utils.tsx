@@ -27,7 +27,7 @@ interface GetValidNumberConfig {
 
 export function getValidNumber(
   value: string,
-  { max, min = 0, loop = false }: GetValidNumberConfig
+  { max, min = 0, loop = false }: GetValidNumberConfig,
 ) {
   let numericValue = parseInt(value, 10);
 

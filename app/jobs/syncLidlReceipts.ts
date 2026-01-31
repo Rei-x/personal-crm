@@ -38,7 +38,7 @@ export const syncLidlReceipts = createJob("syncLidlReceipts", async () => {
         newReceipts.map((r) => ({
           id: r.id,
           receiptDate: r.date,
-        }))
+        })),
       )
       .returning({ id: receipts.id });
 
@@ -51,8 +51,8 @@ export const syncLidlReceipts = createJob("syncLidlReceipts", async () => {
           unitPrice: i.currentUnitPrice.replace(",", "."),
           quantity: i.quantity.replace(",", "."),
           receiptId: r.id,
-        }))
-      )
+        })),
+      ),
     );
   });
 });

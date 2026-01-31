@@ -1,4 +1,4 @@
-import { chromium, Browser, Page } from "playwright";
+import { chromium, type Browser, type Page } from "playwright";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import * as crypto from "crypto";
@@ -11,6 +11,18 @@ import { LotteryOneSchema } from "./lotteryOne";
 import { z } from "zod";
 import { PromotionCards } from "./promotionCards";
 import { CouponsV2Schema } from "./couponsv2";
+
+interface TokenResponse {
+  expires_in: number;
+  access_token: string;
+  refresh_token: string;
+}
+
+interface TicketListResponse {
+  tickets: unknown[];
+  totalCount: number;
+  size: number;
+}
 
 export class LidlPlusApi {
   private static readonly CLIENT_ID = "LidlPlusNativeClient";
@@ -80,17 +92,17 @@ export class LidlPlusApi {
       "content-type": "application/x-www-form-urlencoded",
     };
 
-    const response = await axios.post(
+    const response = await axios.post<TokenResponse>(
       `${LidlPlusApi.AUTH_API}/connect/token`,
       qs.stringify(payload),
       {
         headers,
         timeout: LidlPlusApi.TIMEOUT,
         validateStatus: (status) => status < 500,
-      }
+      },
     );
 
-    const data = response.data;
+    const data: TokenResponse = response.data;
     this.expires = new Date(Date.now() + data.expires_in * 1000);
     this.token = data.access_token;
     this.refreshToken = data.refresh_token;
@@ -126,7 +138,7 @@ export class LidlPlusApi {
   private async parseCode(page: Page, acceptLegalTerms = true): Promise<string> {
     const response = await page.waitForResponse(
       (response) =>
-        response.url().includes(`${LidlPlusApi.AUTH_API}/connect`) && response.status() === 302
+        response.url().includes(`${LidlPlusApi.AUTH_API}/connect`) && response.status() === 302,
     );
     const location = response.headers()["location"] || "";
 
@@ -152,7 +164,7 @@ export class LidlPlusApi {
 
   private async checkLoginError(page: Page): Promise<void> {
     const response = await page.waitForResponse((response) =>
-      response.url().includes(`${LidlPlusApi.AUTH_API}/Account/Login`)
+      response.url().includes(`${LidlPlusApi.AUTH_API}/Account/Login`),
     );
     if (response.status() <= 400) {
       return;
@@ -167,10 +179,10 @@ export class LidlPlusApi {
   private async check2faAuth(
     page: Page,
     verifyMode: "phone" | "email" = "phone",
-    verifyTokenFunc?: () => Promise<string>
+    verifyTokenFunc?: () => Promise<string>,
   ): Promise<void> {
     const response = await page.waitForResponse((response) =>
-      response.url().includes(`${LidlPlusApi.AUTH_API}/Account/Login`)
+      response.url().includes(`${LidlPlusApi.AUTH_API}/Account/Login`),
     );
     if (!response.headers()["location"]?.includes("/connect/authorize/callback")) {
       await page.click(`${verifyMode} button`);
@@ -190,7 +202,7 @@ export class LidlPlusApi {
       verifyMode?: "phone" | "email";
       verifyTokenFunc?: () => Promise<string>;
       acceptLegalTerms?: boolean;
-    } = {}
+    } = {},
   ): Promise<void> {
     const browser = await this.initBrowser(options.headless);
     const page = await browser.newPage();
@@ -240,18 +252,21 @@ export class LidlPlusApi {
     const url = `${LidlPlusApi.TICKET_API}/${this.country}/tickets`;
     const headers = await this.getDefaultHeaders();
 
-    const response = await axios.get(`${url}?pageNumber=1&onlyFavorite=${onlyFavorite}`, {
-      headers,
-      timeout: LidlPlusApi.TIMEOUT,
-    });
+    const response = await axios.get<TicketListResponse>(
+      `${url}?pageNumber=1&onlyFavorite=${onlyFavorite}`,
+      {
+        headers,
+        timeout: LidlPlusApi.TIMEOUT,
+      },
+    );
 
-    let tickets = response.data.tickets;
+    let tickets: unknown[] = response.data.tickets;
 
     const totalPages = Math.ceil(response.data.totalCount / response.data.size) + 6;
 
     for (let i = 2; i <= totalPages; i++) {
       console.log(`Fetching page ${i} of ${totalPages}`);
-      const pageResponse = await axios.get(`${url}?pageNumber=${i}`, {
+      const pageResponse = await axios.get<TicketListResponse>(`${url}?pageNumber=${i}`, {
         headers,
         timeout: LidlPlusApi.TIMEOUT,
       });
@@ -418,6 +433,6 @@ export class LidlPlusApi {
       timeout: LidlPlusApi.TIMEOUT,
     });
 
-    return response.data;
+    return z.string().parse(response.data);
   }
 }

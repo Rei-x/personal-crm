@@ -16,7 +16,7 @@ const alertVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 const Alert = React.forwardRef<
@@ -35,7 +35,7 @@ const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<H
       className={cn("mb-1 font-medium leading-none tracking-tight", className)}
       {...props}
     />
-  )
+  ),
 );
 AlertTitle.displayName = "AlertTitle";
 

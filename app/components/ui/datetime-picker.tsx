@@ -9,27 +9,33 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-import { DayPicker, DayPickerSingleProps, useNavigation } from "react-day-picker";
+import { DayPicker, type Matcher, useDayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { addDays, addMinutes, format } from "date-fns";
 import { TimePickerInput } from "./time-picker-input";
 
-export type DatetimePickerProps = Omit<DayPickerSingleProps, "mode" | "onSelect"> & {
+export interface DatetimePickerProps {
   setDate: (date: Date) => void;
-};
+  selected?: Date;
+  disabled?: Matcher | Matcher[];
+  className?: string;
+  classNames?: Record<string, string>;
+  showOutsideDays?: boolean;
+  initialFocus?: boolean;
+}
 
 function DatetimePicker({
   className,
   classNames,
   showOutsideDays = true,
   setDate: setGlobalDate,
-  ...props
+  selected: selectedDate,
+  disabled,
 }: DatetimePickerProps) {
   const minuteRef = React.useRef<HTMLInputElement>(null);
   const hourRef = React.useRef<HTMLInputElement>(null);
-  const { selected: selectedDate } = props as { selected?: Date };
   const setDate = (dateInput: Date) => {
     const date = new Date(dateInput);
     if (selectedDate) {
@@ -50,8 +56,7 @@ function DatetimePicker({
       <DayPicker
         mode="single"
         selected={selectedDate}
-        // @ts-expect-error ??? ?????????
-        onSelect={setDate}
+        onSelect={(date) => date && setDate(date)}
         showOutsideDays={showOutsideDays}
         className={cn("py-3", className)}
         classNames={{
@@ -62,7 +67,7 @@ function DatetimePicker({
           nav: "space-x-1 flex items-center",
           nav_button: cn(
             buttonVariants({ variant: "outline" }),
-            "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
           ),
           nav_button_previous: "absolute left-1",
           nav_button_next: "absolute right-1",
@@ -73,7 +78,7 @@ function DatetimePicker({
           cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
           day: cn(
             buttonVariants({ variant: "ghost" }),
-            "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+            "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
           ),
           day_range_end: "day-range-end",
           day_selected:
@@ -88,7 +93,7 @@ function DatetimePicker({
         }}
         components={{
           Footer: () => {
-            const { goToDate } = useNavigation();
+            const { goToMonth } = useDayPicker();
             return (
               <div>
                 <hr className="mt-2" />
@@ -99,7 +104,7 @@ function DatetimePicker({
                       className="w-full justify-between text-gray-700"
                       onClick={() => {
                         const chosenDate = new Date();
-                        goToDate(chosenDate);
+                        goToMonth(chosenDate);
                         setDate(chosenDate);
                       }}
                     >
@@ -119,7 +124,7 @@ function DatetimePicker({
                       onClick={() => {
                         const chosenDate = addDays(new Date(), 1);
 
-                        goToDate(chosenDate);
+                        goToMonth(chosenDate);
                         setDate(chosenDate);
                       }}
                     >
@@ -140,7 +145,7 @@ function DatetimePicker({
                         onClick={() => {
                           const chosenDate = addDays(new Date(), 7);
 
-                          goToDate(chosenDate);
+                          goToMonth(chosenDate);
                           setDate(chosenDate);
                         }}
                       >
@@ -158,10 +163,14 @@ function DatetimePicker({
               </div>
             );
           },
-          IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-          IconRight: () => <ChevronRight className="h-4 w-4" />,
+          Chevron: (chevronProps) =>
+            chevronProps.orientation === "left" ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            ),
         }}
-        {...props}
+        disabled={disabled}
       />
       <hr className="my-0" />
       <div className="px-2 mt-4 flex justify-between">
@@ -205,4 +214,4 @@ function DatetimePicker({
 
 DatetimePicker.displayName = "DatetimePicker";
 
-export { DatetimePicker as DatetimePicker };
+export { DatetimePicker };

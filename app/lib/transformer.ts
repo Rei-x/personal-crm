@@ -14,7 +14,7 @@ SuperJSON.registerCustom<MatrixEvent, IEvent>(
       return v instanceof MatrixEvent;
     },
   },
-  "matrixEvent"
+  "matrixEvent",
 );
 
 export const transformer = SuperJSON;

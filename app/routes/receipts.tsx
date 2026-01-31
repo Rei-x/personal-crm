@@ -19,7 +19,7 @@ function Receipts() {
       ...ri,
       receiptId: r.id,
       receiptDate: new Date(r.receiptDate ?? new Date()),
-    }))
+    })),
   );
 
   const groupedByItem = sortBy(
@@ -28,12 +28,13 @@ function Receipts() {
         allItems.map((i) => {
           return {
             ...i,
+            // eslint-disable-next-line unicorn/no-array-reverse -- spread creates copy
             name: [...allItems].reverse().find((ai) => ai.code === i.code)?.name,
             originalName: i.name,
           };
         }),
-        (r) => r.name
-      )
+        (r) => r.name,
+      ),
     ).map(([name, items]) => {
       const sortedItems = sortBy(items, prop("receiptDate"));
 
@@ -42,18 +43,18 @@ function Receipts() {
         items: sortBy(items, prop("unitPrice")),
         count: items.length,
         countUntilLastBought: sortedItems.findIndex(
-          (i) => i.receiptId === sortedItems[sortedItems.length - 1].receiptId
+          (i) => i.receiptId === sortedItems[sortedItems.length - 1].receiptId,
         ),
         timesBought: uniqueBy(items, prop("receiptId")).length,
         firstBoughtItem: sortedItems[0],
         lastBoughtItem: sortedItems[sortedItems.length - 1],
         sum: items.reduce(
           (acc, item) => acc + parseFloat(item.quantity) * parseFloat(item.unitPrice),
-          0
+          0,
         ),
       };
     }),
-    [prop("sum"), "desc"]
+    [prop("sum"), "desc"],
   );
 
   return (
@@ -66,7 +67,7 @@ function Receipts() {
             .filter(
               (i) =>
                 differenceInDays(i.lastBoughtItem.receiptDate, i.firstBoughtItem.receiptDate) > 7 &&
-                i.timesBought > 3
+                i.timesBought > 3,
             )
             .map((item) => ({
               ...item,
@@ -74,10 +75,11 @@ function Receipts() {
                 (item.count /
                   differenceInDays(
                     item.lastBoughtItem.receiptDate,
-                    item.firstBoughtItem.receiptDate
+                    item.firstBoughtItem.receiptDate,
                   )) *
                 differenceInDays(new Date(), item.lastBoughtItem.receiptDate),
             }))
+            // eslint-disable-next-line unicorn/no-array-sort -- sort on new array from map
             .sort((a, b) => b.score - a.score)
             .map((item) => (
               <li className="ml-4" key={item.name}>
@@ -92,7 +94,7 @@ function Receipts() {
                       {(
                         differenceInDays(
                           item.lastBoughtItem.receiptDate,
-                          item.firstBoughtItem.receiptDate
+                          item.firstBoughtItem.receiptDate,
                         ) / item.count
                       ).toFixed(2)}{" "}
                       days
@@ -124,7 +126,7 @@ function Receipts() {
           {groupedByItem
             .filter(
               (i) =>
-                differenceInDays(i.lastBoughtItem.receiptDate, i.firstBoughtItem.receiptDate) > 7
+                differenceInDays(i.lastBoughtItem.receiptDate, i.firstBoughtItem.receiptDate) > 7,
             )
             .map((item) => (
               <li key={item.name}>
@@ -138,7 +140,7 @@ function Receipts() {
                       <br /> First bought: {format(item.firstBoughtItem.receiptDate, "dd.MM.yyyy")},
                       <br /> Last bought: {format(
                         item.lastBoughtItem.receiptDate,
-                        "dd.MM.yyyy"
+                        "dd.MM.yyyy",
                       )}{" "}
                       <br /> Items per week:{" "}
                       <b>
@@ -146,7 +148,7 @@ function Receipts() {
                           (item.count /
                             differenceInDays(
                               item.lastBoughtItem.receiptDate,
-                              item.firstBoughtItem.receiptDate
+                              item.firstBoughtItem.receiptDate,
                             )) *
                           7
                         ).toFixed(2)}

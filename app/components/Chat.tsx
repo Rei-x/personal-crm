@@ -90,14 +90,14 @@ export const Chat = ({
         onSubmit={(e) => {
           e.preventDefault();
 
-          sendMessage
+          void sendMessage
             .mutateAsync({ roomId, message, date: scheduledDate })
             .then(() => {
               setMessage("");
               setScheduledDate(undefined);
             })
             .finally(() => {
-              invalidateRoom();
+              void invalidateRoom();
             });
         }}
       >
@@ -137,12 +137,12 @@ export const Chat = ({
                       <ContextMenuItem
                         className="flex justify-between"
                         onClick={() => {
-                          deleteScheduledMessage
+                          void deleteScheduledMessage
                             .mutateAsync({
                               id: message.messageId,
                             })
-                            .then(async () => {
-                              invalidateRoom();
+                            .then(() => {
+                              void invalidateRoom();
                             });
                         }}
                       >
@@ -160,6 +160,7 @@ export const Chat = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
                 e.preventDefault();
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- e.target.form is HTMLFormElement
                 (e.target.form as HTMLFormElement).requestSubmit();
               }
             }}

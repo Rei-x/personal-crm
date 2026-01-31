@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React from "react";
 import {
-  Period,
-  TimePickerType,
+  type Period,
+  type TimePickerType,
   getArrowByType,
   getDateByType,
   setDateByType,
@@ -37,7 +37,7 @@ const TimePickerInput = React.forwardRef<HTMLInputElement, TimePickerInputProps>
       onRightFocus,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [flag, setFlag] = React.useState<boolean>(false);
     const [prevIntKey, setPrevIntKey] = React.useState<string>("0");
@@ -102,7 +102,7 @@ const TimePickerInput = React.forwardRef<HTMLInputElement, TimePickerInputProps>
         name={name || picker}
         className={cn(
           "w-[48px] text-center font-mono text-base tabular-nums caret-transparent focus:bg-accent focus:text-accent-foreground [&::-webkit-inner-spin-button]:appearance-none",
-          className
+          className,
         )}
         value={value || calculatedValue}
         onChange={(e) => {
@@ -118,7 +118,7 @@ const TimePickerInput = React.forwardRef<HTMLInputElement, TimePickerInputProps>
         {...props}
       />
     );
-  }
+  },
 );
 
 TimePickerInput.displayName = "TimePickerInput";

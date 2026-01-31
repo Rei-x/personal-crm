@@ -46,7 +46,7 @@ export const appRouter = router({
         message: z.string(),
         date: z.date().optional(),
         mentions: z.array(z.string()).optional(),
-      })
+      }),
     )
     .mutation(async ({ input: { roomId, message, date, mentions } }) => {
       if (date) {
@@ -58,7 +58,7 @@ export const appRouter = router({
           },
           {
             startAfter: date,
-          }
+          },
         );
         console.log("Scheduled message", result);
       } else {
@@ -78,7 +78,7 @@ export const appRouter = router({
     .input(
       z.object({
         id: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input: { id } }) => {
       await scheduleMessage.cancel(id);
@@ -93,7 +93,7 @@ export const appRouter = router({
       .input(
         z.object({
           roomId: z.string(),
-        })
+        }),
       )
       .query(async ({ input: { roomId } }) => {
         const room = client.getRoom(roomId);
@@ -142,45 +142,47 @@ export const appRouter = router({
                 roomId: j.data.roomId,
                 message: j.data.message,
                 date: j.startAfter,
-              }))
+              })),
           ),
           latestMessageDate: new Date(room.getLastActiveTimestamp()),
           settings,
         };
       }),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- matrix-js-sdk types
     all: loggedProcedure.query(async () => {
-      return client
-        .getVisibleRooms()
-        .map((room) => {
-          const eventsCopy = room
-            .getLiveTimeline()
-            .getEvents()
-            .map((e) => e);
+      return (
+        [...client.getVisibleRooms()]
+          .map((room) => {
+            const eventsCopy = [...room.getLiveTimeline().getEvents()];
 
-          return {
-            name: room.name,
-            id: room.roomId,
-            latestEvent: eventsCopy[room.getLiveTimeline().getEvents().length - 1]?.event,
-            latestMessage: eventsCopy.reverse().find((e) => e.getType() === "m.room.message"),
-          };
-        })
-        .sort((a, b) => {
-          const aMessage = a.latestEvent;
-          const bMessage = b.latestEvent;
-          if (!aMessage?.origin_server_ts && !bMessage?.origin_server_ts) {
-            return 0;
-          }
+            return {
+              name: room.name,
+              id: room.roomId,
+              latestEvent: eventsCopy[eventsCopy.length - 1]?.event,
+              latestMessage: [...eventsCopy]
+                .reverse() // eslint-disable-line unicorn/no-array-reverse -- spread creates copy
+                .find((e) => e.getType() === "m.room.message"),
+            };
+          })
+          // eslint-disable-next-line unicorn/no-array-sort -- spread creates copy
+          .sort((a, b) => {
+            const aMessage = a.latestEvent;
+            const bMessage = b.latestEvent;
+            if (!aMessage?.origin_server_ts && !bMessage?.origin_server_ts) {
+              return 0;
+            }
 
-          if (!aMessage?.origin_server_ts) {
-            return 1;
-          }
+            if (!aMessage?.origin_server_ts) {
+              return 1;
+            }
 
-          if (!bMessage?.origin_server_ts) {
-            return -1;
-          }
+            if (!bMessage?.origin_server_ts) {
+              return -1;
+            }
 
-          return aMessage.origin_server_ts > bMessage.origin_server_ts ? -1 : 1;
-        });
+            return aMessage.origin_server_ts > bMessage.origin_server_ts ? -1 : 1;
+          })
+      );
     }),
     updateSettings: loggedProcedure
       .input(
@@ -188,7 +190,7 @@ export const appRouter = router({
           roomId: z.string(),
           howOftenInDays: z.number(),
           enableTranscriptions: z.boolean(),
-        })
+        }),
       )
       .mutation(async ({ input }) => {
         return db
@@ -217,7 +219,7 @@ export const appRouter = router({
       .input(
         z.object({
           id: z.string(),
-        })
+        }),
       )
       .query(async ({ input: { id } }) => {
         return lidlPlusClient.receipt(id);
@@ -251,7 +253,7 @@ export const appRouter = router({
             secondaryFontColor: null,
             tagSpecial: p.specialPromotion.tag ?? "",
             title: p.title,
-          }))
+          })),
         ),
       };
     }),
@@ -272,7 +274,7 @@ export const appRouter = router({
           promotionId: z.string(),
           source: z.string(),
           isActivated: z.boolean(),
-        })
+        }),
       )
       .mutation(async ({ input }) => {
         if (input.isActivated) {
