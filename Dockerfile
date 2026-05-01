@@ -11,7 +11,7 @@ RUN fc-cache -f -v
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 COPY . /app
 WORKDIR /app
 
