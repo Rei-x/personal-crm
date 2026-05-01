@@ -1,2 +1,5 @@
 onlyBuiltDependencies:
   - esbuild
+  - canvas
+  - classic-level
+  - "@playwright/browser-chromium"

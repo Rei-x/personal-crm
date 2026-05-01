@@ -1,8 +1,10 @@
 FROM node:20-slim AS base
 
-# Install curl, wget, and font dependencies
+# Install curl, wget, font and canvas runtime dependencies
 RUN apt update && \
-    apt install -y curl wget fontconfig fonts-liberation && \
+    apt install -y curl wget fontconfig fonts-liberation \
+        libcairo2 libpango-1.0-0 libpangocairo-1.0-0 \
+        libjpeg62-turbo libgif7 librsvg2-2 && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure font cache
