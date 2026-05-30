@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { calendarRouter } from "./calendar";
 import { db } from "../db";
-import { roomSettings } from "../schema";
-import { eq } from "drizzle-orm";
+import { roomSettings, user } from "../schema";
+import { count, eq } from "drizzle-orm";
 import { client } from "../services/matrix";
 import { TRPCError, type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
@@ -14,7 +15,7 @@ import { addMonths } from "date-fns";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomDelay = () => Math.floor(Math.random() * 600) + 200; // 200-800ms
 
-const devDelayProcedure = publicProcedure.use(async (opts) => {
+const devDelayProcedure = protectedProcedure.use(async (opts) => {
   if (process.env.NODE_ENV !== "production") {
     await delay(randomDelay());
   }
@@ -39,6 +40,13 @@ const loggedProcedure = devDelayProcedure.use(async (opts) => {
 });
 
 export const appRouter = router({
+  // Public: lets the login page show a one-time registration form when no
+  // owner account exists yet.
+  needsSetup: publicProcedure.query(async () => {
+    const [row] = await db.select({ value: count() }).from(user);
+    return { needsSetup: Number(row?.value ?? 0) === 0 };
+  }),
+  calendar: calendarRouter,
   sendMessage: loggedProcedure
     .input(
       z.object({

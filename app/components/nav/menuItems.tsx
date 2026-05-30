@@ -1,4 +1,4 @@
-import { Home, ReceiptIcon, ShoppingCart } from "lucide-react";
+import { CalendarDays, Home, ReceiptIcon, ShoppingCart } from "lucide-react";
 import type { ReactNode } from "react";
 
 export interface MenuItem {
@@ -19,5 +19,10 @@ export const menuItems: MenuItem[] = [
     title: "Kupony",
     icon: <ShoppingCart className="h-4 w-4" />,
     href: "/lidl",
+  },
+  {
+    title: "Kalendarz",
+    icon: <CalendarDays className="h-4 w-4" />,
+    href: "/calendar",
   },
 ];

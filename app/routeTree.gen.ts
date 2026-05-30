@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReceiptsRouteImport } from './routes/receipts'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LidlRouteImport } from './routes/lidl'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms.$roomId'
 
@@ -25,9 +27,19 @@ const ReceiptsRoute = ReceiptsRouteImport.update({
   path: '/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LidlRoute = LidlRouteImport.update({
   id: '/lidl',
   path: '/lidl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,14 +55,18 @@ const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/lidl': typeof LidlRoute
+  '/login': typeof LoginRoute
   '/receipts': typeof ReceiptsRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/rooms/$roomId': typeof RoomsRoomIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/lidl': typeof LidlRoute
+  '/login': typeof LoginRoute
   '/receipts': typeof ReceiptsRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/rooms/$roomId': typeof RoomsRoomIdRoute
@@ -58,22 +74,48 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/lidl': typeof LidlRoute
+  '/login': typeof LoginRoute
   '/receipts': typeof ReceiptsRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/rooms/$roomId': typeof RoomsRoomIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lidl' | '/receipts' | '/rooms' | '/rooms/$roomId'
+  fullPaths:
+    | '/'
+    | '/calendar'
+    | '/lidl'
+    | '/login'
+    | '/receipts'
+    | '/rooms'
+    | '/rooms/$roomId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lidl' | '/receipts' | '/rooms' | '/rooms/$roomId'
-  id: '__root__' | '/' | '/lidl' | '/receipts' | '/rooms' | '/rooms/$roomId'
+  to:
+    | '/'
+    | '/calendar'
+    | '/lidl'
+    | '/login'
+    | '/receipts'
+    | '/rooms'
+    | '/rooms/$roomId'
+  id:
+    | '__root__'
+    | '/'
+    | '/calendar'
+    | '/lidl'
+    | '/login'
+    | '/receipts'
+    | '/rooms'
+    | '/rooms/$roomId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarRoute: typeof CalendarRoute
   LidlRoute: typeof LidlRoute
+  LoginRoute: typeof LoginRoute
   ReceiptsRoute: typeof ReceiptsRoute
   RoomsRoute: typeof RoomsRouteWithChildren
 }
@@ -94,11 +136,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lidl': {
       id: '/lidl'
       path: '/lidl'
       fullPath: '/lidl'
       preLoaderRoute: typeof LidlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -130,7 +186,9 @@ const RoomsRouteWithChildren = RoomsRoute._addFileChildren(RoomsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarRoute: CalendarRoute,
   LidlRoute: LidlRoute,
+  LoginRoute: LoginRoute,
   ReceiptsRoute: ReceiptsRoute,
   RoomsRoute: RoomsRouteWithChildren,
 }

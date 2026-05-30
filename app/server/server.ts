@@ -14,6 +14,13 @@ import { scheduleNotificationJob } from "@/jobs/scheduleNotification";
 import { scheduleMessage } from "@/jobs/scheduleMessage";
 import { enableLidlCoupons } from "@/jobs/enableLidlCoupons";
 import { syncLidlReceipts } from "@/jobs/syncLidlReceipts";
+import { syncCalendars } from "@/jobs/syncCalendars";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./auth";
+import { createContext } from "./trpc";
+import { requireAuth } from "./http/requireAuth";
+import { googleOAuthRouter } from "./http/oauth";
+import { feedHandler } from "./http/feed";
 
 enableSpeechToText();
 
@@ -35,19 +42,34 @@ await enableLidlCoupons.schedule("5 * * * *");
 await syncLidlReceipts.work();
 await syncLidlReceipts.schedule("5 * * * *");
 
+await syncCalendars.work();
+await syncCalendars.schedule("*/15 * * * *");
+
 const api = express();
 
-api.use(cors());
 api.use(imageApi);
 
 api.use(
   "/trpc",
   trpcExpress.createExpressMiddleware({
     router: appRouter,
+    createContext,
   }),
 );
 
 const app = express();
+
+// Allow credentialed (cookie) requests — same-origin in prod, localhost in dev.
+app.use(cors({ origin: true, credentials: true }));
+
+// Better Auth handler — MUST be mounted before any body parser.
+app.all("/api/auth/*", toNodeHandler(auth));
+
+// Public, unauthenticated iCal feed that friends subscribe to.
+app.get("/share/:token", feedHandler);
+
+// Google account connect flow — requires the logged-in owner session.
+app.use("/oauth/google", requireAuth, googleOAuthRouter);
 
 app.use("/api", api);
 
