@@ -11,8 +11,10 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoomsPageSkeleton } from "@/components/skeletons";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { requireOwner } from "@/lib/guards";
 
 export const Route = createFileRoute("/rooms")({
+  beforeLoad: requireOwner,
   component: RoomsLayout,
   pendingComponent: RoomsPageSkeleton,
 });

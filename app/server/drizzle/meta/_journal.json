@@ -57,6 +57,13 @@
       "when": 1780161538941,
       "tag": "0007_clear_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780168434847,
+      "tag": "0008_tenancy",
+      "breakpoints": true
     }
   ]
 }

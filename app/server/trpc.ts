@@ -46,3 +46,12 @@ export const protectedProcedure = t.procedure.use(async (opts) => {
     ctx: { user: opts.ctx.user, session: opts.ctx.session },
   });
 });
+
+// Owner-only: the personal-CRM features (rooms / receipts / lidl) are never
+// exposed to invited calendar friends.
+export const ownerProcedure = protectedProcedure.use(async (opts) => {
+  if (opts.ctx.user.role !== "owner") {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return opts.next();
+});

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireOwner } from "@/lib/guards";
 import { CouponCard } from "@/components/CouponCard";
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc";
@@ -7,6 +8,7 @@ import { LidlPageSkeleton } from "@/components/skeletons";
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/lidl")({
+  beforeLoad: requireOwner,
   component: LidlCoupons,
   pendingComponent: LidlPageSkeleton,
 });

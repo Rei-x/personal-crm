@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { ownerProcedure, publicProcedure, router } from "../trpc";
 import { calendarRouter } from "./calendar";
+import { invitesRouter } from "./invites";
 import { db } from "../db";
 import { roomSettings, user } from "../schema";
 import { count, eq } from "drizzle-orm";
@@ -15,7 +16,9 @@ import { addMonths } from "date-fns";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomDelay = () => Math.floor(Math.random() * 600) + 200; // 200-800ms
 
-const devDelayProcedure = protectedProcedure.use(async (opts) => {
+// Everything built on this is OWNER-ONLY (rooms / receipts / lidl). Invited
+// calendar friends never reach these.
+const devDelayProcedure = ownerProcedure.use(async (opts) => {
   if (process.env.NODE_ENV !== "production") {
     await delay(randomDelay());
   }
@@ -47,6 +50,7 @@ export const appRouter = router({
     return { needsSetup: Number(row?.value ?? 0) === 0 };
   }),
   calendar: calendarRouter,
+  invites: invitesRouter,
   sendMessage: loggedProcedure
     .input(
       z.object({

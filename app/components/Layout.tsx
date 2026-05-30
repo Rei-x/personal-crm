@@ -5,8 +5,13 @@ import { Link } from "@tanstack/react-router";
 import { BottomNav } from "./BottomNav";
 import { menuItems } from "./nav/menuItems";
 import { PageSkeleton } from "./skeletons";
+import { useSession } from "@/lib/authClient";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
+  const { data } = useSession();
+  const isOwner = data?.user?.role === "owner";
+  const items = menuItems.filter((item) => isOwner || !item.ownerOnly);
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <BottomNav />
@@ -20,7 +25,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {menuItems.map((item) => (
+              {items.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}

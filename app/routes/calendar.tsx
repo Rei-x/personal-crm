@@ -1,83 +1,119 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, LogOut, Plus, RefreshCw, RotateCw, Trash2 } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Copy, LogOut, Pencil, Plus, RefreshCw, RotateCw, Trash2 } from "lucide-react";
 import { useTRPC } from "@/lib/trpc";
 import { authClient } from "@/lib/authClient";
+import type { RouterOutputs } from "@/server/routers/app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/calendar")({
-  component: CalendarSettings,
+  component: CalendarDashboard,
 });
 
-// The OAuth connect route lives at the server root (not under /api).
+type ShareLink = RouterOutputs["calendar"]["links"]["list"][number];
+type AccountCalendar = RouterOutputs["calendar"]["accounts"][number]["calendars"][number];
+type CalOption = AccountCalendar & { accountEmail: string };
+
+interface LinkFormData {
+  name: string;
+  detailLevel: "full" | "busy";
+  calendarIds: string[];
+  expiresAt: Date | null;
+}
+
 function oauthStartUrl(): string {
   return window.ENV.API_URL.replace(/\/api\/?$/, "") + "/oauth/google/start";
 }
+function googleAddUrl(feedUrl: string): string {
+  return "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(feedUrl);
+}
+function toDateInputValue(d: Date | null): string {
+  return d ? new Date(d).toISOString().slice(0, 10) : "";
+}
 
-function CalendarSettings() {
+function CalendarDashboard() {
   const trpc = useTRPC();
   const qc = useQueryClient();
+  const { data: session } = authClient.useSession();
+  const isOwner = session?.user?.role === "owner";
 
   const accountsQuery = useQuery(trpc.calendar.accounts.queryOptions());
-  const shareQuery = useQuery(trpc.calendar.share.queryOptions());
+  const linksQuery = useQuery(trpc.calendar.links.list.queryOptions());
 
-  const [title, setTitle] = useState("");
-  useEffect(() => {
-    if (shareQuery.data?.feedTitle) setTitle(shareQuery.data.feedTitle);
-  }, [shareQuery.data?.feedTitle]);
-
-  // Surface ?connected / ?error from the OAuth redirect, then clean the URL.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("connected");
     const error = params.get("error");
     if (connected) toast.success(`Połączono konto ${connected}`);
-    if (error) toast.error(`Błąd połączenia: ${error}`);
+    if (error) toast.error(`Błąd: ${error}`);
     if (connected || error) window.history.replaceState({}, "", "/calendar");
   }, []);
 
+  const invalidateLinks = () => qc.invalidateQueries(trpc.calendar.links.list.queryFilter());
   const invalidateAccounts = () => qc.invalidateQueries(trpc.calendar.accounts.queryFilter());
-  const invalidateShare = () => qc.invalidateQueries(trpc.calendar.share.queryFilter());
 
-  const toggleCalendar = useMutation({
-    ...trpc.calendar.toggleCalendar.mutationOptions(),
-    onSuccess: invalidateAccounts,
-  });
   const disconnect = useMutation({
     ...trpc.calendar.disconnectAccount.mutationOptions(),
     onSuccess: () => {
       void invalidateAccounts();
+      void invalidateLinks();
       toast.success("Konto rozłączone");
-    },
-  });
-  const rotate = useMutation({
-    ...trpc.calendar.rotateShareLink.mutationOptions(),
-    onSuccess: () => {
-      void invalidateShare();
-      toast.success("Link odświeżony — stary przestał działać");
-    },
-  });
-  const updateTitle = useMutation({
-    ...trpc.calendar.updateFeedTitle.mutationOptions(),
-    onSuccess: () => {
-      void invalidateShare();
-      toast.success("Zapisano");
     },
   });
   const syncNow = useMutation({
     ...trpc.calendar.syncNow.mutationOptions(),
     onSuccess: () => toast.success("Synchronizacja uruchomiona"),
   });
+  const createLink = useMutation({
+    ...trpc.calendar.links.create.mutationOptions(),
+    onSuccess: () => {
+      void invalidateLinks();
+      setCreating(false);
+      toast.success("Link utworzony");
+    },
+  });
+  const updateLink = useMutation({
+    ...trpc.calendar.links.update.mutationOptions(),
+    onSuccess: () => {
+      void invalidateLinks();
+      toast.success("Zapisano");
+    },
+  });
+  const setEnabled = useMutation({
+    ...trpc.calendar.links.setEnabled.mutationOptions(),
+    onSuccess: () => void invalidateLinks(),
+  });
+  const rotate = useMutation({
+    ...trpc.calendar.links.rotate.mutationOptions(),
+    onSuccess: () => {
+      void invalidateLinks();
+      toast.success("Link odświeżony — stary przestał działać");
+    },
+  });
+  const deleteLink = useMutation({
+    ...trpc.calendar.links.delete.mutationOptions(),
+    onSuccess: () => {
+      void invalidateLinks();
+      toast.success("Link usunięty");
+    },
+  });
+
+  const [creating, setCreating] = useState(false);
 
   const accounts = accountsQuery.data ?? [];
-  const feedUrl = shareQuery.data?.feedUrl ?? "";
+  const links = linksQuery.data ?? [];
+  const allCalendars: CalOption[] = accounts.flatMap((a) =>
+    a.calendars.map((c) => ({ ...c, accountEmail: a.email })),
+  );
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -85,7 +121,7 @@ function CalendarSettings() {
         <div>
           <h1 className="text-2xl font-bold">Kalendarz</h1>
           <p className="text-muted-foreground">
-            Połącz konta Google i udostępnij jeden wspólny kalendarz znajomym.
+            Połącz swoje konta Google i udostępniaj kalendarze przez linki.
           </p>
         </div>
         <Button
@@ -96,126 +132,391 @@ function CalendarSettings() {
         </Button>
       </div>
 
+      {/* Connected Google accounts */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle>Połączone konta Google</CardTitle>
-            <CardDescription>
-              Zaznacz kalendarze, które mają trafić do wspólnego feedu.
-            </CardDescription>
+            <CardDescription>Kalendarze z tych kont możesz dodać do linków.</CardDescription>
           </div>
-          <a href={oauthStartUrl()}>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Połącz konto
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => syncNow.mutate()} loading={syncNow.isPending}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Synchronizuj
             </Button>
-          </a>
+            <a href={oauthStartUrl()}>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Połącz konto
+              </Button>
+            </a>
+          </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-6">
+        <CardContent className="flex flex-col gap-3">
           {accounts.length === 0 && (
             <p className="text-sm text-muted-foreground">Brak połączonych kont.</p>
           )}
-          {accounts.map((acc) => (
-            <div key={acc.id} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{acc.email}</span>
-                  {acc.status === "needs_reauth" && (
-                    <Badge variant="destructive">Wymaga ponownego połączenia</Badge>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => disconnect.mutate({ accountId: acc.id })}
-                  loading={disconnect.isPending && disconnect.variables?.accountId === acc.id}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Rozłącz
-                </Button>
-              </div>
-              <div className="flex flex-col gap-2 pl-2">
-                {acc.calendars.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Brak kalendarzy.</p>
+          {accounts.map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center justify-between border-b pb-2 last:border-0"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{a.email}</span>
+                <span className="text-sm text-muted-foreground">
+                  {a.calendars.length} kalendarzy
+                </span>
+                {a.status === "needs_reauth" && (
+                  <Badge variant="destructive">Wymaga ponownego połączenia</Badge>
                 )}
-                {acc.calendars.map((c) => (
-                  <label
-                    key={c.id}
-                    className="flex items-center justify-between gap-3 rounded-md border p-2"
-                  >
-                    <span className="flex items-center gap-2 text-sm">
-                      <span
-                        className="inline-block h-3 w-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: c.backgroundColor ?? "#888888" }}
-                      />
-                      {c.summary ?? c.id}
-                      {c.primary && <Badge variant="secondary">główny</Badge>}
-                    </span>
-                    <Switch
-                      checked={c.selected}
-                      onCheckedChange={(checked) =>
-                        toggleCalendar.mutate({ calendarId: c.id, selected: checked })
-                      }
-                    />
-                  </label>
-                ))}
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => disconnect.mutate({ accountId: a.id })}
+                loading={disconnect.isPending && disconnect.variables?.accountId === a.id}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Rozłącz
+              </Button>
             </div>
           ))}
         </CardContent>
       </Card>
 
+      {/* Share links */}
       <Card>
-        <CardHeader>
-          <CardTitle>Wspólny link</CardTitle>
-          <CardDescription>
-            Wyślij ten adres znajomym — dodadzą go w Google Calendar przez „Inne kalendarze → Z
-            adresu URL”.
-            {shareQuery.data ? ` Obecnie ${shareQuery.data.eventCount} wydarzeń.` : ""} Uwaga:
-            Google odświeża subskrybowane kalendarze co kilka–kilkanaście godzin.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>Linki do udostępniania</CardTitle>
+            <CardDescription>
+              Każdy link może pokazywać inne kalendarze i poziom szczegółów. Google odświeża
+              subskrybowane kalendarze co kilka–kilkanaście godzin.
+            </CardDescription>
+          </div>
+          <Button onClick={() => setCreating((v) => !v)} disabled={allCalendars.length === 0}>
+            <Plus className="mr-2 h-4 w-4" /> Nowy link
+          </Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="feedTitle">Nazwa kalendarza</Label>
-            <div className="flex gap-2">
-              <Input id="feedTitle" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <Button
-                variant="outline"
-                onClick={() => updateTitle.mutate({ title })}
-                loading={updateTitle.isPending}
-              >
-                Zapisz
-              </Button>
+          {allCalendars.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Najpierw połącz konto Google, aby tworzyć linki.
+            </p>
+          )}
+          {creating && (
+            <LinkForm
+              calendars={allCalendars}
+              submitting={createLink.isPending}
+              onCancel={() => setCreating(false)}
+              onSubmit={(d) =>
+                createLink.mutate({
+                  name: d.name,
+                  detailLevel: d.detailLevel,
+                  calendarIds: d.calendarIds,
+                  expiresAt: d.expiresAt,
+                })
+              }
+            />
+          )}
+          {links.length === 0 && !creating && (
+            <p className="text-sm text-muted-foreground">Nie masz jeszcze żadnych linków.</p>
+          )}
+          {links.map((link) => (
+            <LinkCard
+              key={link.id}
+              link={link}
+              calendars={allCalendars}
+              savingEdit={updateLink.isPending}
+              onToggleEnabled={(enabled) => setEnabled.mutate({ id: link.id, enabled })}
+              onRotate={() => rotate.mutate({ id: link.id })}
+              onDelete={() => deleteLink.mutate({ id: link.id })}
+              onSave={(d) =>
+                updateLink.mutate({
+                  id: link.id,
+                  name: d.name,
+                  detailLevel: d.detailLevel,
+                  calendarIds: d.calendarIds,
+                  expiresAt: d.expiresAt,
+                })
+              }
+            />
+          ))}
+        </CardContent>
+      </Card>
+
+      {isOwner && <InvitesCard />}
+    </div>
+  );
+}
+
+function LinkForm({
+  calendars,
+  initial,
+  submitting,
+  onSubmit,
+  onCancel,
+}: {
+  calendars: CalOption[];
+  initial?: ShareLink;
+  submitting: boolean;
+  onSubmit: (data: LinkFormData) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [full, setFull] = useState((initial?.detailLevel ?? "busy") === "full");
+  const [selected, setSelected] = useState<Set<string>>(new Set(initial?.calendarIds ?? []));
+  const [expires, setExpires] = useState(toDateInputValue(initial?.expiresAt ?? null));
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="link-name">Nazwa</Label>
+        <Input
+          id="link-name"
+          placeholder="np. Dostępność dla pracy"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
+        <span>
+          Pełne szczegóły wydarzeń
+          <span className="block text-xs text-muted-foreground">
+            Wyłączone = tylko bloki „Zajęty”, bez tytułów
+          </span>
+        </span>
+        <Switch checked={full} onCheckedChange={setFull} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Kalendarze w tym linku</Label>
+        <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+          {calendars.map((c) => (
+            <label key={c.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+              <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} />
+              <span
+                className="inline-block h-3 w-3 shrink-0 rounded-full"
+                style={{ backgroundColor: c.backgroundColor ?? "#888888" }}
+              />
+              <span className="truncate">{c.summary ?? c.id}</span>
+              <span className="ml-auto truncate text-xs text-muted-foreground">
+                {c.accountEmail}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="link-expiry">Wygasa (opcjonalnie)</Label>
+        <Input
+          id="link-expiry"
+          type="date"
+          value={expires}
+          onChange={(e) => setExpires(e.target.value)}
+        />
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          loading={submitting}
+          disabled={!name.trim() || selected.size === 0}
+          onClick={() =>
+            onSubmit({
+              name: name.trim(),
+              detailLevel: full ? "full" : "busy",
+              calendarIds: [...selected],
+              expiresAt: expires ? new Date(expires) : null,
+            })
+          }
+        >
+          Zapisz
+        </Button>
+        <Button variant="ghost" onClick={onCancel}>
+          Anuluj
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function LinkCard({
+  link,
+  calendars,
+  savingEdit,
+  onToggleEnabled,
+  onRotate,
+  onDelete,
+  onSave,
+}: {
+  link: ShareLink;
+  calendars: CalOption[];
+  savingEdit: boolean;
+  onToggleEnabled: (enabled: boolean) => void;
+  onRotate: () => void;
+  onDelete: () => void;
+  onSave: (data: LinkFormData) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{link.name}</span>
+          <Badge variant={link.detailLevel === "full" ? "default" : "secondary"}>
+            {link.detailLevel === "full" ? "Pełne szczegóły" : "Tylko zajętość"}
+          </Badge>
+          {!link.enabled && <Badge variant="outline">Wyłączony</Badge>}
+          {link.expiresAt && (
+            <Badge variant="outline">Wygasa {format(new Date(link.expiresAt), "d MMM yyyy")}</Badge>
+          )}
+        </div>
+        <Switch checked={link.enabled} onCheckedChange={onToggleEnabled} />
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        {link.calendarIds.length} kalendarzy ·{" "}
+        {link.lastAccessedAt
+          ? `ostatnio pobrany ${formatDistanceToNow(new Date(link.lastAccessedAt), { addSuffix: true })}`
+          : "jeszcze nie pobrany"}
+      </div>
+
+      <div className="flex gap-2">
+        <Input readOnly value={link.feedUrl} />
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            void navigator.clipboard.writeText(link.feedUrl);
+            toast.success("Skopiowano");
+          }}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <a href={link.webcalUrl}>
+          <Button variant="outline" size="sm">
+            Subskrybuj
+          </Button>
+        </a>
+        <a href={googleAddUrl(link.feedUrl)} target="_blank" rel="noreferrer">
+          <Button variant="outline" size="sm">
+            Dodaj do Google
+          </Button>
+        </a>
+        <Button variant="ghost" size="sm" onClick={onRotate}>
+          <RotateCw className="mr-2 h-4 w-4" /> Odśwież
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}>
+          <Pencil className="mr-2 h-4 w-4" /> Edytuj
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDelete}>
+          <Trash2 className="mr-2 h-4 w-4" /> Usuń
+        </Button>
+      </div>
+
+      {editing && (
+        <LinkForm
+          calendars={calendars}
+          initial={link}
+          submitting={savingEdit}
+          onCancel={() => setEditing(false)}
+          onSubmit={(d) => {
+            onSave(d);
+            setEditing(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function InvitesCard() {
+  const trpc = useTRPC();
+  const qc = useQueryClient();
+  const invitesQuery = useQuery(trpc.invites.list.queryOptions());
+  const [email, setEmail] = useState("");
+
+  const invalidate = () => qc.invalidateQueries(trpc.invites.list.queryFilter());
+  const create = useMutation({
+    ...trpc.invites.create.mutationOptions(),
+    onSuccess: (r) => {
+      void invalidate();
+      void navigator.clipboard.writeText(r.url);
+      toast.success("Link zaproszenia skopiowany");
+      setEmail("");
+    },
+  });
+  const revoke = useMutation({
+    ...trpc.invites.revoke.mutationOptions(),
+    onSuccess: () => void invalidate(),
+  });
+
+  const invites = invitesQuery.data ?? [];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Zaproszenia</CardTitle>
+        <CardDescription>
+          Wygeneruj link dla znajomego — tylko zaproszone osoby mogą się zarejestrować.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <Input
+            placeholder="email (opcjonalnie — ogranicza zaproszenie)"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button
+            onClick={() => create.mutate({ email: email || undefined })}
+            loading={create.isPending}
+          >
+            Utwórz
+          </Button>
+        </div>
+        {invites.map((i) => (
+          <div
+            key={i.id}
+            className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span>{i.email ?? "dowolny email"}</span>
+                {i.usedAt && <Badge variant="outline">użyte</Badge>}
+              </div>
+              <div className="truncate text-xs text-muted-foreground">{i.url}</div>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Adres feedu (.ics)</Label>
-            <div className="flex gap-2">
-              <Input readOnly value={feedUrl} />
+            <div className="flex gap-1">
               <Button
                 variant="outline"
+                size="icon"
                 onClick={() => {
-                  void navigator.clipboard.writeText(feedUrl);
+                  void navigator.clipboard.writeText(i.url);
                   toast.success("Skopiowano");
                 }}
               >
                 <Copy className="h-4 w-4" />
               </Button>
+              <Button variant="ghost" size="icon" onClick={() => revoke.mutate({ id: i.id })}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => syncNow.mutate()} loading={syncNow.isPending}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Synchronizuj teraz
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => rotate.mutate()}
-              loading={rotate.isPending}
-            >
-              <RotateCw className="mr-2 h-4 w-4" /> Odśwież link (unieważnij stary)
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

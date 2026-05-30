@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireOwner } from "@/lib/guards";
 import { useTRPC } from "@/lib/trpc";
 import { differenceInDays, format } from "date-fns";
 import { groupBy, prop, sortBy, uniqueBy } from "remeda";
@@ -6,6 +7,7 @@ import { ReceiptsPageSkeleton } from "@/components/skeletons";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/receipts")({
+  beforeLoad: requireOwner,
   component: Receipts,
   pendingComponent: ReceiptsPageSkeleton,
 });

@@ -9,6 +9,7 @@ import {
   numeric,
   uniqueIndex,
   index,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const processedEvents = pgTable("processed_events", {
@@ -61,7 +62,8 @@ export const itemsReceiptRelation = relations(receiptItem, ({ one }) => ({
 
 // ---------------------------------------------------------------------------
 // Better Auth tables (default model/column names so the Drizzle adapter maps
-// them automatically). Single-user app: registration is locked to OWNER_EMAIL.
+// them automatically). Multi-tenant: `role` distinguishes the owner (full app)
+// from invited friends (calendar feature only). Registration is invite-gated.
 // ---------------------------------------------------------------------------
 
 export const user = pgTable("user", {
@@ -70,6 +72,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  role: text("role").notNull().default("friend"), // 'owner' | 'friend'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -140,30 +143,40 @@ export const verification = pgTable(
 // Calendar sharing feature
 // ---------------------------------------------------------------------------
 
-// A connected Google account whose calendars we read. Tokens are stored
-// encrypted (AES-256-GCM); see app/server/services/crypto.ts.
-export const googleAccount = pgTable("google_account", {
-  id: text("id").primaryKey(), // nanoid
-  googleSub: text("google_sub").notNull().unique(), // stable Google user id
-  email: text("email").notNull(),
-  refreshTokenEnc: text("refresh_token_enc").notNull(),
-  accessTokenEnc: text("access_token_enc"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
-  scope: text("scope"),
-  status: text("status").notNull().default("active"), // active | needs_reauth
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+// A connected Google account whose calendars we read. Owned by an app user.
+// Tokens are stored encrypted (AES-256-GCM); see app/server/services/crypto.ts.
+export const googleAccount = pgTable(
+  "google_account",
+  {
+    id: text("id").primaryKey(), // nanoid
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    googleSub: text("google_sub").notNull().unique(), // stable Google user id
+    email: text("email").notNull(),
+    refreshTokenEnc: text("refresh_token_enc").notNull(),
+    accessTokenEnc: text("access_token_enc"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    status: text("status").notNull().default("active"), // active | needs_reauth
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("google_account_userId_idx").on(table.userId)],
+);
 
-// A calendar belonging to a connected account. `selected` controls inclusion
-// in the shared feed.
+// A calendar belonging to a connected account. Inclusion in a feed is decided
+// per share link via `share_link_calendar` (not a global flag).
 export const calendar = pgTable(
   "calendar",
   {
     id: text("id").primaryKey(), // nanoid
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     googleAccountId: text("google_account_id")
       .notNull()
       .references(() => googleAccount.id, { onDelete: "cascade" }),
@@ -174,7 +187,6 @@ export const calendar = pgTable(
     accessRole: text("access_role"),
     backgroundColor: text("background_color"),
     primary: boolean("primary").notNull().default(false),
-    selected: boolean("selected").notNull().default(true),
     lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -184,6 +196,7 @@ export const calendar = pgTable(
   },
   (table) => [
     uniqueIndex("calendar_account_gcal_idx").on(table.googleAccountId, table.googleCalendarId),
+    index("calendar_userId_idx").on(table.userId),
   ],
 );
 
@@ -215,30 +228,95 @@ export const calendarEvent = pgTable(
   (table) => [uniqueIndex("event_calendar_gevent_idx").on(table.calendarId, table.googleEventId)],
 );
 
-// Singleton row (id = 1) holding the rotatable feed token + title.
-export const shareSettings = pgTable("share_settings", {
-  id: integer("id").primaryKey().default(1),
-  shareToken: text("share_token").notNull().unique(),
-  feedTitle: text("feed_title").notNull().default("My calendar"),
-  rotatedAt: timestamp("rotated_at", { withTimezone: true }),
+// A shareable feed. A user can have many, each exposing a chosen subset of
+// their calendars at a chosen detail level.
+export const shareLink = pgTable(
+  "share_link",
+  {
+    id: text("id").primaryKey(), // nanoid
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(), // unguessable, rotatable
+    name: text("name").notNull(), // owner-facing label, e.g. "Work availability"
+    detailLevel: text("detail_level").notNull().default("busy"), // 'full' | 'busy'
+    feedTitle: text("feed_title").notNull().default("My calendar"), // X-WR-CALNAME
+    enabled: boolean("enabled").notNull().default(true),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    rotatedAt: timestamp("rotated_at", { withTimezone: true }),
+  },
+  (table) => [index("share_link_userId_idx").on(table.userId)],
+);
+
+// Which calendars a share link exposes (many-to-many).
+export const shareLinkCalendar = pgTable(
+  "share_link_calendar",
+  {
+    shareLinkId: text("share_link_id")
+      .notNull()
+      .references(() => shareLink.id, { onDelete: "cascade" }),
+    calendarId: text("calendar_id")
+      .notNull()
+      .references(() => calendar.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.shareLinkId, table.calendarId] })],
+);
+
+// Invite-only onboarding. Single-use; optionally restricted to one email.
+export const invite = pgTable("invite", {
+  id: text("id").primaryKey(), // nanoid
+  token: text("token").notNull().unique(),
+  createdByUserId: text("created_by_user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  email: text("email"), // if set, only this address may claim
+  role: text("role").notNull().default("friend"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  usedByUserId: text("used_by_user_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const googleAccountRelations = relations(googleAccount, ({ many }) => ({
+export const googleAccountRelations = relations(googleAccount, ({ one, many }) => ({
+  user: one(user, { fields: [googleAccount.userId], references: [user.id] }),
   calendars: many(calendar),
 }));
 
 export const calendarRelations = relations(calendar, ({ one, many }) => ({
+  user: one(user, { fields: [calendar.userId], references: [user.id] }),
   googleAccount: one(googleAccount, {
     fields: [calendar.googleAccountId],
     references: [googleAccount.id],
   }),
   events: many(calendarEvent),
+  shareLinks: many(shareLinkCalendar),
 }));
 
 export const calendarEventRelations = relations(calendarEvent, ({ one }) => ({
   calendar: one(calendar, {
     fields: [calendarEvent.calendarId],
+    references: [calendar.id],
+  }),
+}));
+
+export const shareLinkRelations = relations(shareLink, ({ one, many }) => ({
+  user: one(user, { fields: [shareLink.userId], references: [user.id] }),
+  calendars: many(shareLinkCalendar),
+}));
+
+export const shareLinkCalendarRelations = relations(shareLinkCalendar, ({ one }) => ({
+  shareLink: one(shareLink, {
+    fields: [shareLinkCalendar.shareLinkId],
+    references: [shareLink.id],
+  }),
+  calendar: one(calendar, {
+    fields: [shareLinkCalendar.calendarId],
     references: [calendar.id],
   }),
 }));

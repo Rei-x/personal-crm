@@ -68,7 +68,21 @@ app.all("/api/auth/*", toNodeHandler(auth));
 // Public, unauthenticated iCal feed that friends subscribe to.
 app.get("/share/:token", feedHandler);
 
-// Google account connect flow — requires the logged-in owner session.
+// Invite landing: set the (httpOnly) gate cookie that the signup hook reads,
+// then send the user to the login screen.
+app.get("/invite/:token", (req, res) => {
+  const token = req.params.token;
+  res.cookie("invite_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 60 * 1000,
+    path: "/",
+  });
+  res.redirect("/login?invite=" + encodeURIComponent(token));
+});
+
+// Google calendar connect flow — requires a logged-in session (any user).
 app.use("/oauth/google", requireAuth, googleOAuthRouter);
 
 app.use("/api", api);

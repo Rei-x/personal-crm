@@ -3,6 +3,7 @@
 import * as React from "react";
 import { type MenuItem, menuItems } from "./nav/menuItems";
 import { Link } from "@tanstack/react-router";
+import { useSession } from "@/lib/authClient";
 
 const MenuItemComponent: React.FC<{ item: MenuItem }> = ({ item }) => {
   return (
@@ -18,9 +19,13 @@ const MenuItemComponent: React.FC<{ item: MenuItem }> = ({ item }) => {
 };
 
 export function BottomNav() {
+  const { data } = useSession();
+  const isOwner = data?.user?.role === "owner";
+  const items = menuItems.filter((item) => isOwner || !item.ownerOnly);
+
   return (
     <nav className="fixed md:hidden bottom-0 left-0 right-0 z-50 flex h-16 w-full items-center justify-around border-t bg-white shadow-t dark:border-gray-800 dark:bg-gray-950">
-      {menuItems.map((item) => (
+      {items.map((item) => (
         <MenuItemComponent key={item.title} item={item} />
       ))}
     </nav>

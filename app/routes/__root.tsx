@@ -22,7 +22,7 @@ function RootComponent() {
     if (!session && !isLogin) {
       void navigate({ to: "/login" });
     } else if (session && isLogin) {
-      void navigate({ to: "/calendar" });
+      void navigate({ to: "/" }); // role-based landing handled by the index route
     }
   }, [session, isPending, isLogin, navigate]);
 

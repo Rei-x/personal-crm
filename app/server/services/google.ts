@@ -123,9 +123,9 @@ export async function importCalendarList(acc: Account): Promise<void> {
     } else {
       await db.insert(calendar).values({
         id: randomId(),
+        userId: acc.userId,
         googleAccountId: acc.id,
         googleCalendarId: item.id,
-        selected: item.accessRole === "owner" || item.primary === true,
         ...values,
       });
     }

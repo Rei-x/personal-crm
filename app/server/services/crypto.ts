@@ -42,22 +42,34 @@ export function randomId(): string {
   return crypto.randomUUID();
 }
 
-// Stateless CSRF token for the Google OAuth round-trip: HMAC(timestamp).
-export function signOAuthState(): string {
+// Stateless, signed CSRF token for the Google OAuth round-trip that also binds
+// the connecting user: `<ts>.<userId>.<HMAC(ts.userId)>`. (userId is a UUID, no dots.)
+export function signOAuthState(userId: string): string {
   const ts = Date.now().toString();
-  const sig = crypto.createHmac("sha256", env.BETTER_AUTH_SECRET).update(ts).digest("base64url");
-  return `${ts}.${sig}`;
+  const payload = `${ts}.${userId}`;
+  const sig = crypto
+    .createHmac("sha256", env.BETTER_AUTH_SECRET)
+    .update(payload)
+    .digest("base64url");
+  return `${payload}.${sig}`;
 }
 
-export function verifyOAuthState(state: string | undefined, maxAgeMs = 10 * 60 * 1000): boolean {
-  if (!state) return false;
-  const [ts, sig] = state.split(".");
-  if (!ts || !sig) return false;
+/** Returns the bound userId if the state is valid and fresh, else null. */
+export function verifyOAuthState(
+  state: string | undefined,
+  maxAgeMs = 10 * 60 * 1000,
+): string | null {
+  if (!state) return null;
+  const parts = state.split(".");
+  if (parts.length !== 3) return null;
+  const [ts, userId, sig] = parts;
+  if (!ts || !userId || !sig) return null;
   const expected = crypto
     .createHmac("sha256", env.BETTER_AUTH_SECRET)
-    .update(ts)
+    .update(`${ts}.${userId}`)
     .digest("base64url");
-  if (sig.length !== expected.length) return false;
-  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
-  return Date.now() - Number(ts) < maxAgeMs;
+  if (sig.length !== expected.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  if (Date.now() - Number(ts) >= maxAgeMs) return null;
+  return userId;
 }

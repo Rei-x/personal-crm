@@ -1,9 +1,15 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { addDays } from "date-fns";
 import type { calendar_v3 } from "googleapis";
 import { createJob } from "@/server/services/pgboss";
 import { db } from "@/server/db";
-import { googleAccount, calendar, calendarEvent } from "@/server/schema";
+import {
+  googleAccount,
+  calendar,
+  calendarEvent,
+  shareLink,
+  shareLinkCalendar,
+} from "@/server/schema";
 import { calendarClientForAccount } from "@/server/services/google";
 
 const WINDOW_PAST_DAYS = 30;
@@ -11,23 +17,53 @@ const WINDOW_FUTURE_DAYS = 180;
 const INSERT_CHUNK = 500;
 
 type GEvent = calendar_v3.Schema$Event;
+type Payload = { userId?: string } | undefined;
 
-export const syncCalendars = createJob("syncCalendars", async () => {
-  const accounts = await db.query.googleAccount.findMany({
-    where: (q) => eq(q.status, "active"),
-    with: { calendars: true },
+// Only calendars exposed by >=1 enabled, non-expired share link are worth
+// syncing. Scope to one user when a userId is supplied (connect / "sync now").
+async function calendarIdsToSync(userId?: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ calendarId: shareLinkCalendar.calendarId })
+    .from(shareLinkCalendar)
+    .innerJoin(shareLink, eq(shareLink.id, shareLinkCalendar.shareLinkId))
+    .where(
+      and(
+        eq(shareLink.enabled, true),
+        or(isNull(shareLink.expiresAt), gt(shareLink.expiresAt, new Date())),
+        userId ? eq(shareLink.userId, userId) : undefined,
+      ),
+    );
+  return rows.map((r) => r.calendarId);
+}
+
+export const syncCalendars = createJob<Payload>("syncCalendars", async (jobs) => {
+  const userId = jobs?.[0]?.data?.userId;
+
+  const calendarIds = await calendarIdsToSync(userId);
+  if (calendarIds.length === 0) return;
+
+  const cals = await db.query.calendar.findMany({
+    where: (q, o) => o.inArray(q.id, calendarIds),
+    with: { googleAccount: true },
   });
 
   const timeMin = addDays(new Date(), -WINDOW_PAST_DAYS).toISOString();
   const timeMax = addDays(new Date(), WINDOW_FUTURE_DAYS).toISOString();
 
-  for (const acc of accounts) {
-    const selected = acc.calendars.filter((c) => c.selected);
-    if (selected.length === 0) continue;
+  // One Google client per account.
+  const byAccount = new Map<string, typeof cals>();
+  for (const c of cals) {
+    const list = byAccount.get(c.googleAccountId) ?? [];
+    list.push(c);
+    byAccount.set(c.googleAccountId, list);
+  }
 
+  for (const group of byAccount.values()) {
+    const acc = group[0]?.googleAccount;
+    if (!acc || acc.status !== "active") continue;
     const cal = calendarClientForAccount(acc);
 
-    for (const c of selected) {
+    for (const c of group) {
       try {
         const events = await listAllEvents(cal, c.googleCalendarId, timeMin, timeMax);
         await replaceCalendarEvents(c.id, events);
