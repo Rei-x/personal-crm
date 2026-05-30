@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
-import { Copy, LogOut, Pencil, Plus, RefreshCw, RotateCw, Trash2 } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  LogOut,
+  Pencil,
+  Plus,
+  RefreshCw,
+  RotateCw,
+  Trash2,
+} from "lucide-react";
 import { useTRPC } from "@/lib/trpc";
 import { authClient } from "@/lib/authClient";
 import type { RouterOutputs } from "@/server/routers/app";
@@ -32,9 +41,6 @@ interface LinkFormData {
 
 function oauthStartUrl(): string {
   return window.ENV.API_URL.replace(/\/api\/?$/, "") + "/oauth/google/start";
-}
-function googleAddUrl(feedUrl: string): string {
-  return "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(feedUrl);
 }
 function toDateInputValue(d: Date | null): string {
   return d ? new Date(d).toISOString().slice(0, 10) : "";
@@ -131,6 +137,40 @@ function CalendarDashboard() {
           <LogOut className="mr-2 h-4 w-4" /> Wyloguj
         </Button>
       </div>
+
+      {/* First-run onboarding for someone who just joined */}
+      {accounts.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Witaj 👋 Zacznij w 3 krokach</CardTitle>
+            <CardDescription>
+              Udostępniaj znajomym swoją dostępność — z pełnymi szczegółami albo tylko jako
+              „zajęty".
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <ol className="flex flex-col gap-2 text-sm">
+              <li>
+                <span className="mr-2 font-semibold text-primary">1.</span>Połącz swój kalendarz
+                Google.
+              </li>
+              <li>
+                <span className="mr-2 font-semibold text-primary">2.</span>Utwórz link — wybierz
+                kalendarze i poziom szczegółów.
+              </li>
+              <li>
+                <span className="mr-2 font-semibold text-primary">3.</span>Wyślij link znajomym —
+                dodadzą go do swojego kalendarza.
+              </li>
+            </ol>
+            <a href={oauthStartUrl()}>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Połącz kalendarz Google
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Connected Google accounts */}
       <Card>
@@ -390,29 +430,27 @@ function LinkCard({
           : "jeszcze nie pobrany"}
       </div>
 
-      <div className="flex gap-2">
-        <Input readOnly value={link.feedUrl} />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => {
-            void navigator.clipboard.writeText(link.feedUrl);
-            toast.success("Skopiowano");
-          }}
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col gap-1">
+        <Label>Link do wysłania znajomym</Label>
+        <div className="flex gap-2">
+          <Input readOnly value={link.shareUrl} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              void navigator.clipboard.writeText(link.shareUrl);
+              toast.success("Skopiowano");
+            }}
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <a href={link.webcalUrl}>
+        <a href={link.shareUrl} target="_blank" rel="noreferrer">
           <Button variant="outline" size="sm">
-            Subskrybuj
-          </Button>
-        </a>
-        <a href={googleAddUrl(link.feedUrl)} target="_blank" rel="noreferrer">
-          <Button variant="outline" size="sm">
-            Dodaj do Google
+            <ExternalLink className="mr-2 h-4 w-4" /> Podgląd
           </Button>
         </a>
         <Button variant="ghost" size="sm" onClick={onRotate}>

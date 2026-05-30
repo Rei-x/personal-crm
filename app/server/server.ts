@@ -21,6 +21,7 @@ import { createContext } from "./trpc";
 import { requireAuth } from "./http/requireAuth";
 import { googleOAuthRouter } from "./http/oauth";
 import { feedHandler } from "./http/feed";
+import { sharePageHandler } from "./http/sharePage";
 
 enableSpeechToText();
 
@@ -65,8 +66,11 @@ app.use(cors({ origin: true, credentials: true }));
 // Better Auth handler — MUST be mounted before any body parser.
 app.all("/api/auth/*", toNodeHandler(auth));
 
-// Public, unauthenticated iCal feed that friends subscribe to.
+// Public, unauthenticated iCal feed that calendar apps subscribe to.
 app.get("/share/:token", feedHandler);
+
+// Public, human-friendly "add to your calendar" landing page for recipients.
+app.get("/c/:token", sharePageHandler);
 
 // Invite landing: set the (httpOnly) gate cookie that the signup hook reads,
 // then send the user to the login screen.

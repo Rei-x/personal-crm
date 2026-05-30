@@ -16,6 +16,10 @@ function feedUrl(token: string): string {
 function webcalUrl(token: string): string {
   return feedUrl(token).replace(/^https?:\/\//, "webcal://");
 }
+// Human-friendly landing page — the link you actually send to people.
+function sharePageUrl(token: string): string {
+  return `${env.PUBLIC_URL}/c/${token}`;
+}
 
 async function ownedLink(userId: string, id: string) {
   const link = await db.query.shareLink.findFirst({
@@ -98,6 +102,7 @@ export const calendarRouter = router({
         expiresAt: l.expiresAt,
         lastAccessedAt: l.lastAccessedAt,
         calendarIds: l.calendars.map((m) => m.calendarId),
+        shareUrl: sharePageUrl(l.token),
         feedUrl: feedUrl(l.token),
         webcalUrl: webcalUrl(l.token),
       }));

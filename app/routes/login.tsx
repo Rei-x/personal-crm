@@ -40,12 +40,12 @@ function LoginPage() {
         ? await authClient.signUp.email({ email, password, name: email.split("@")[0] ?? "user" })
         : await authClient.signIn.email({ email, password });
       if (res.error) {
-        toast.error(res.error.message ?? "Authentication failed");
+        toast.error(res.error.message ?? "Logowanie nie powiodło się");
         return;
       }
       void navigate({ to: "/" });
     } catch {
-      toast.error("Authentication failed");
+      toast.error("Logowanie nie powiodło się");
     } finally {
       setLoading(false);
     }
@@ -56,19 +56,19 @@ function LoginPage() {
     try {
       await authClient.signIn.social({ provider: "google", callbackURL: "/" });
     } catch {
-      toast.error("Google sign-in failed");
+      toast.error("Logowanie przez Google nie powiodło się");
       setGoogleLoading(false);
     }
   }
 
-  const title = inviteToken ? "You're invited" : isRegister ? "Create your account" : "Sign in";
+  const title = inviteToken ? "Masz zaproszenie" : isRegister ? "Utwórz konto" : "Zaloguj się";
   const description = inviteInvalid
-    ? "This invite is invalid or has already been used."
+    ? "To zaproszenie jest nieprawidłowe lub zostało już użyte."
     : inviteToken
-      ? "Create your account to connect and share your calendars."
+      ? "Utwórz konto, aby połączyć i udostępniać swoje kalendarze."
       : isRegister
-        ? "Set up the owner account for this app."
-        : "Enter your credentials to continue.";
+        ? "Skonfiguruj konto właściciela aplikacji."
+        : "Wprowadź dane logowania, aby kontynuować.";
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -79,9 +79,9 @@ function LoginPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Button variant="outline" type="button" onClick={onGoogle} loading={googleLoading}>
-            Continue with Google
+            Kontynuuj z Google
           </Button>
-          <div className="text-center text-xs text-muted-foreground">or</div>
+          <div className="text-center text-xs text-muted-foreground">lub</div>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
@@ -95,7 +95,7 @@ function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Hasło</Label>
               <Input
                 id="password"
                 type="password"
@@ -107,7 +107,7 @@ function LoginPage() {
               />
             </div>
             <Button type="submit" loading={loading}>
-              {isRegister ? "Create account" : "Sign in"}
+              {isRegister ? "Utwórz konto" : "Zaloguj się"}
             </Button>
           </form>
         </CardContent>
