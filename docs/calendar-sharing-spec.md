@@ -27,6 +27,15 @@ code in the repo. The infra we reuse: **Drizzle** (token + event storage), **pg-
 | OAuth            | App **published to Production**, scope `calendar.readonly` (read-only)                            |
 | Window           | Rolling **−30 days … +180 days**, recurring events expanded                                       |
 
+> **Update (shipped 2026-05-30):** the originally-specced custom "password gate"
+> was replaced by **Better Auth** (email+password, registration locked to
+> `OWNER_EMAIL`), and the **Authelia SSO** that fronted `crm.suzuya.dev` was
+> removed from the Traefik router — the app now gates itself. New env vars:
+> `PUBLIC_URL`, `OWNER_EMAIL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+> `BETTER_AUTH_SECRET`, `ENCRYPTION_KEY` (set in Coolify). OAuth client published
+> to **Production** (calendar.readonly). Migration `0007`. Verified: protected
+> API → 401, feed public, no Authelia redirect.
+
 ### Accepted limitations
 
 - **Refresh lag is Google's, not ours.** We can serve a fresh feed every few minutes,
