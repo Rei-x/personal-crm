@@ -44,7 +44,7 @@ await syncLidlReceipts.work();
 await syncLidlReceipts.schedule("5 * * * *");
 
 await syncCalendars.work();
-await syncCalendars.schedule("*/15 * * * *");
+await syncCalendars.schedule("*/15 * * * *", undefined, { singletonKey: "sync:all" });
 
 const api = express();
 

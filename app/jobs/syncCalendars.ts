@@ -1,7 +1,7 @@
 import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { addDays } from "date-fns";
 import type { calendar_v3 } from "googleapis";
-import { createJob } from "@/server/services/pgboss";
+import { boss, createJob } from "@/server/services/pgboss";
 import { db } from "@/server/db";
 import {
   googleAccount,
@@ -18,6 +18,32 @@ const INSERT_CHUNK = 500;
 
 type GEvent = calendar_v3.Schema$Event;
 type Payload = { userId?: string } | undefined;
+
+// Best-effort HTTP status from a Google/Gaxios error (assertion-free).
+function errStatus(e: unknown): number | undefined {
+  if (!e || typeof e !== "object") return undefined;
+  let c: unknown;
+  if ("response" in e && e.response && typeof e.response === "object" && "status" in e.response) {
+    c = e.response.status;
+  } else if ("status" in e) {
+    c = e.status;
+  } else if ("code" in e) {
+    c = e.code;
+  }
+  if (typeof c === "number") return c;
+  if (typeof c === "string" && /^\d+$/.test(c)) return Number(c);
+  return undefined;
+}
+
+// Enqueue a sync, de-duplicated per user so a burst of edits (or connect +
+// several link saves) collapses into one job. The 15-min cron is the backstop.
+export async function requestSync(userId?: string): Promise<void> {
+  await boss.send({
+    name: "syncCalendars",
+    data: { userId },
+    options: { singletonKey: `sync:${userId ?? "all"}` },
+  });
+}
 
 // Only calendars exposed by >=1 enabled, non-expired share link are worth
 // syncing. Scope to one user when a userId is supplied (connect / "sync now").
@@ -72,18 +98,26 @@ export const syncCalendars = createJob<Payload>("syncCalendars", async (jobs) =>
           `Synced ${events.length} events for ${acc.email} / ${c.summary ?? c.googleCalendarId}`,
         );
       } catch (e) {
+        const status = errStatus(e);
         const message = e instanceof Error ? e.message : String(e);
-        console.error(`Calendar sync failed for ${acc.email} / ${c.summary}:`, message);
-        if (
-          message.includes("invalid_grant") ||
-          message.includes("401") ||
-          message.includes("invalid_request")
-        ) {
+        console.error(
+          `Calendar sync failed for ${acc.email} / ${c.summary} (status ${status ?? "?"}):`,
+          message,
+        );
+        if (message.includes("invalid_grant") || status === 401) {
+          // Refresh token is dead — the owner must reconnect this account.
           await db
             .update(googleAccount)
             .set({ status: "needs_reauth" })
             .where(eq(googleAccount.id, acc.id));
+          break; // every calendar on this account will fail the same way
+        } else if (status === 404 || status === 410) {
+          // Calendar deleted or access revoked — stop serving its stale events.
+          await replaceCalendarEvents(c.id, []);
+          console.warn(`Calendar ${c.summary ?? c.googleCalendarId} inaccessible — cleared events`);
         }
+        // 403 (rate limit / transient), 5xx, network: leave data intact; the
+        // next run retries.
       }
     }
   }

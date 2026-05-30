@@ -6,7 +6,7 @@ import { googleAccount } from "../schema";
 import { auth } from "../auth";
 import { encrypt, randomId, signOAuthState, verifyOAuthState } from "../services/crypto";
 import { buildAuthUrl, exchangeCode, importCalendarList } from "../services/google";
-import { syncCalendars } from "@/jobs/syncCalendars";
+import { requestSync } from "@/jobs/syncCalendars";
 
 export const googleOAuthRouter = Router();
 
@@ -93,7 +93,7 @@ async function handleCallback(req: Request, res: Response): Promise<void> {
     if (account) {
       await importCalendarList(account);
     }
-    await syncCalendars.emit({ userId });
+    await requestSync(userId);
 
     res.redirect("/calendar?connected=" + encodeURIComponent(exchanged.email));
   } catch (e) {

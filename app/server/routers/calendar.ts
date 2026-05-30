@@ -6,7 +6,7 @@ import { db } from "../db";
 import { env } from "../env";
 import { googleAccount, shareLink, shareLinkCalendar } from "../schema";
 import { generateShareToken, randomId } from "../services/crypto";
-import { syncCalendars } from "@/jobs/syncCalendars";
+import { requestSync } from "@/jobs/syncCalendars";
 
 const detailLevel = z.enum(["full", "busy"]);
 
@@ -83,7 +83,7 @@ export const calendarRouter = router({
     }),
 
   syncNow: protectedProcedure.mutation(async ({ ctx }) => {
-    await syncCalendars.emit({ userId: ctx.user.id });
+    await requestSync(ctx.user.id);
   }),
 
   links: router({
@@ -131,7 +131,7 @@ export const calendarRouter = router({
           expiresAt: input.expiresAt ?? null,
         });
         await setLinkCalendars(ctx.user.id, id, input.calendarIds);
-        await syncCalendars.emit({ userId: ctx.user.id });
+        await requestSync(ctx.user.id);
         return { id, feedUrl: feedUrl(token) };
       }),
 
@@ -158,7 +158,7 @@ export const calendarRouter = router({
         }
         if (input.calendarIds) {
           await setLinkCalendars(ctx.user.id, input.id, input.calendarIds);
-          await syncCalendars.emit({ userId: ctx.user.id });
+          await requestSync(ctx.user.id);
         }
       }),
 
