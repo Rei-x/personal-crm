@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM node:23-slim AS base
 
 # Install curl, wget, font and canvas runtime dependencies
 RUN apt update && \
